@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PmUserApplication" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.coco8talk.pm.user.PmUserApplication" />
+    <module name="pm-user" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

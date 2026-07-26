@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: pm-interaction
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${coco8talk.datasource.host:localhost}:3306/${coco8talk.datasource.database:interview_practice_platform}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${coco8talk.datasource.username:root}
+    password: ${coco8talk.datasource.password:}
+    type: com.alibaba.druid.pool.DruidDataSource
+  data:
+    redis:
+      host: ${coco8talk.redis.host:localhost}
+      port: ${coco8talk.redis.port:6379}
+      database: ${coco8talk.redis.database:0}
+
+server:
+  port: 8086
+  servlet:
+    context-path: /api
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.coco8talk.pm.interaction.model.entity
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0

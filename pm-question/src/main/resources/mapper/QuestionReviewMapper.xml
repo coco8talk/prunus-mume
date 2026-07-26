@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coco8talk.pm.question.mapper.QuestionReviewMapper">
+
+    <resultMap id="BaseResultMap" type="com.coco8talk.pm.question.model.entity.QuestionReview">
+            <id property="id" column="id" />
+            <result property="questionId" column="question_id" />
+            <result property="reviewerId" column="reviewer_id" />
+            <result property="reviewStatus" column="review_status" />
+            <result property="reviewMessage" column="review_message" />
+            <result property="reviewTime" column="review_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,question_id,reviewer_id,review_status,review_message,review_time
+    </sql>
+</mapper>

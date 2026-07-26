@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: pm-payment
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${coco8talk.datasource.host:localhost}:3306/${coco8talk.datasource.database:interview_practice_platform}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${coco8talk.datasource.username:root}
+    password: ${coco8talk.datasource.password:}
+    type: com.alibaba.druid.pool.DruidDataSource
+
+server:
+  port: 8089
+  servlet:
+    context-path: /api
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.coco8talk.pm.payment.model.entity
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+coco8talk:
+  snowflake:
+    workId: ${SNOWFLAKE_WORK_ID:0}
+  alipay:
+    gateway-url: ${ALIPAY_GATEWAY_URL:https://openapi-sandbox.dl.alipaydev.com/gateway.do}
+    app-id: ${ALIPAY_APP_ID:}
+    alipayPublicKey: ${ALIPAY_PUBLIC_KEY:}
+    privateKey: ${ALIPAY_PRIVATE_KEY:}
+    notify-url: ${ALIPAY_NOTIFY_URL:http://localhost:8089/api/alipay/callback}
+    return-url: ${ALIPAY_RETURN_URL:http://localhost:8089/api/alipay/return}

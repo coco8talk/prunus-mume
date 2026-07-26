@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coco8talk.pm.payment.mapper.MembershipOrderMapper">
+
+    <resultMap id="BaseResultMap" type="com.coco8talk.pm.payment.model.entity.MembershipOrder">
+            <id property="id" column="id" />
+            <result property="userId" column="user_id" />
+            <result property="outOrderNo" column="out_order_no" />
+            <result property="orderNo" column="order_no" />
+            <result property="levelId" column="level_id" />
+            <result property="durationType" column="duration_type" />
+            <result property="durationValue" column="duration_value" />
+            <result property="amount" column="amount" />
+            <result property="currency" column="currency" />
+            <result property="paymentStatus" column="payment_status" />
+            <result property="paymentMethod" column="payment_method" />
+            <result property="startTime" column="start_time" />
+            <result property="endTime" column="end_time" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,out_order_no,order_no,level_id,duration_type,
+        duration_value,amount,currency,payment_status,payment_method,
+        start_time,end_time,created_at,updated_at
+    </sql>
+</mapper>

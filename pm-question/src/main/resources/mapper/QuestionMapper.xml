@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coco8talk.pm.question.mapper.QuestionMapper">
+    
+    <resultMap id="BaseResultMap" type="com.coco8talk.pm.question.model.entity.Question">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="answer" column="answer"/>
+        <result property="createUserId" column="create_user_id"/>
+        <result property="tags" column="tags" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="viewNum" column="view_num"/>
+        <result property="thumbNum" column="thumb_num"/>
+        <result property="favourNum" column="favour_num"/>
+        <result property="needVip" column="need_vip"/>
+        <result property="createTime" column="create_time"/>
+        <result property="editTime" column="edit_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+        <result property="reviewStatus" column="review_status"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        q.id, q.title, q.content, q.answer, q.create_user_id, q.tags,
+        q.difficulty, q.view_num, q.thumb_num, q.favour_num, q.need_vip, 
+        q.create_time, q.edit_time, q.update_time, q.deleted, q.version, q.review_status
+    </sql>
+</mapper>

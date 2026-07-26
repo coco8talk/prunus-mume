@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coco8talk.pm.question.bank.mapper.QuestionBankMapper">
+
+    <resultMap id="BaseResultMap" type="com.coco8talk.pm.question.bank.model.entity.QuestionBank">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="picture" column="picture"/>
+        <result property="createUserId" column="create_user_id"/>
+        <result property="description" column="description"/>
+        <result property="questionCount" column="question_count"/>
+        <result property="createTime" column="create_time"/>
+        <result property="editTime" column="edit_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="deleted" column="deleted"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        id,title,picture,create_user_id,description,review_status,
+        reviewer_id,review_message,review_time,question_count,create_time,
+        edit_time,update_time,deleted
+    </sql>
+</mapper>

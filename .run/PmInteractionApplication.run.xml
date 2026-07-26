@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PmInteractionApplication" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.coco8talk.pm.interaction.PmInteractionApplication" />
+    <module name="pm-interaction" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

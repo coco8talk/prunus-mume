@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PmFileStorageApplication" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.coco8talk.pm.filestorage.PmFileStorageApplication" />
+    <module name="pm-file-storage" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

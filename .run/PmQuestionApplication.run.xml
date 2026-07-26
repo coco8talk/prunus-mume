@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PmQuestionApplication" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.coco8talk.pm.question.PmQuestionApplication" />
+    <module name="pm-question" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

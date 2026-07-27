@@ -3,9 +3,9 @@ import com.coco8talk.pm.interaction.service.UserThumbService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.coco8talk.pm.common.Result;
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.ThrowUtils;
+import com.coco8talk.pm.common.result.Result;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.ThrowUtils;
 import com.coco8talk.pm.interaction.mapper.UserThumbMapper;
 import com.coco8talk.pm.interaction.model.entity.UserThumb;
 import com.coco8talk.pm.api.question.service.QuestionApi;

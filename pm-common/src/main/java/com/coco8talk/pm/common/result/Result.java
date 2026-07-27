@@ -1,6 +1,6 @@
-package com.coco8talk.pm.common;
+package com.coco8talk.pm.common.result;
 
-import com.coco8talk.pm.common.HttpStatusEnum;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
 import lombok.Getter;
 
 /**

@@ -1,8 +1,8 @@
 package com.coco8talk.pm.common.util;
 
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.BizException;
-import com.coco8talk.pm.common.ThrowUtils;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.BizException;
+import com.coco8talk.pm.common.exception.ThrowUtils;
 
 /**
  * ID转换工具类
@@ -19,7 +19,7 @@ public class IdUtils {
      * @param idStr 字符串形式的ID
      * @param fieldName 字段名称，用于错误提示
      * @return Long类型的ID
-     * @throws com.coco8talk.pm.common.BizException 当ID格式不正确时
+     * @throws BizException 当ID格式不正确时
      */
     public static Long parseId(String idStr, String fieldName) {
         ThrowUtils.throwIfTrue(idStr == null || idStr.trim().isEmpty(), 

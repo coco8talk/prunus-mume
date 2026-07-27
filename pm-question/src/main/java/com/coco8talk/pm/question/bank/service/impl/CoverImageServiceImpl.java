@@ -3,9 +3,9 @@ import com.coco8talk.pm.question.bank.service.QuestionBankService;
 import com.coco8talk.pm.question.bank.service.CoverImageService;
 
 import cn.hutool.core.util.StrUtil;
-import com.coco8talk.pm.common.Result;
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.ThrowUtils;
+import com.coco8talk.pm.common.result.Result;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.ThrowUtils;
 import com.coco8talk.pm.question.bank.model.entity.QuestionBank;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.ObjectMetadata;

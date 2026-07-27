@@ -2,7 +2,7 @@ package com.coco8talk.pm.user.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.user.model.dto.*;
 import com.coco8talk.pm.user.model.entity.User;
 import com.coco8talk.pm.user.model.vo.LoginUserVO;

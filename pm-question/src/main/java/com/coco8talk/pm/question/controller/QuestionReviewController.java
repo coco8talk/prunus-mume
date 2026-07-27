@@ -2,7 +2,7 @@ package com.coco8talk.pm.question.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.api.auth.constant.AuthConstant;
 import com.coco8talk.pm.question.model.dto.QueryQuestionReviewDTO;
 import com.coco8talk.pm.question.model.dto.ReviewQuestionDTO;

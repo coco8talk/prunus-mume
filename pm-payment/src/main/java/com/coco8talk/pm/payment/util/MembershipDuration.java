@@ -1,7 +1,7 @@
 package com.coco8talk.pm.payment.util;
 
-import com.coco8talk.pm.common.BizException;
-import com.coco8talk.pm.common.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.BizException;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
 
 import java.time.Period;
 

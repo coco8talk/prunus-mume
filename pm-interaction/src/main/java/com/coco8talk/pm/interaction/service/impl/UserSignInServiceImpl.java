@@ -1,9 +1,9 @@
 package com.coco8talk.pm.interaction.service.impl;
 import com.coco8talk.pm.interaction.service.UserSignInService;
 
-import com.coco8talk.pm.common.Result;
-import com.coco8talk.pm.common.CommonConstant;
-import com.coco8talk.pm.common.HttpStatusEnum;
+import com.coco8talk.pm.common.result.Result;
+import com.coco8talk.pm.common.constant.CommonConstant;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
 import com.coco8talk.pm.interaction.util.RedisKeyUtil;
 import com.coco8talk.pm.common.lock.DistributedLock;
 import com.coco8talk.pm.api.auth.service.CurrentUserProvider;

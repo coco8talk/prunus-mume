@@ -1,8 +1,8 @@
 package com.coco8talk.pm.common.util;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.ThrowUtils;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.ThrowUtils;
 
 import java.util.function.Function;
 

@@ -1,7 +1,7 @@
 package com.coco8talk.pm.common.lock;
 
-import com.coco8talk.pm.common.BizException;
-import com.coco8talk.pm.common.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.BizException;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;

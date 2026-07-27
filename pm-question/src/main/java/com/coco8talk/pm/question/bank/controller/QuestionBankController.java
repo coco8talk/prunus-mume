@@ -2,9 +2,9 @@ package com.coco8talk.pm.question.bank.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.api.auth.constant.AuthConstant;
-import com.coco8talk.pm.common.HttpStatusEnum;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
 import com.coco8talk.pm.question.bank.model.dto.AddQuestionBankDTO;
 import com.coco8talk.pm.question.bank.model.dto.DeleteQuestionBankDTO;
 import com.coco8talk.pm.question.bank.model.dto.EditQuestionBankDTO;

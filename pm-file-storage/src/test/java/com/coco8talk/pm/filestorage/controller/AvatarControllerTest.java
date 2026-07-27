@@ -1,7 +1,7 @@
 package com.coco8talk.pm.filestorage.controller;
 
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.filestorage.service.AvatarService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,6 +1,6 @@
 package com.coco8talk.pm.filestorage.controller;
 
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.filestorage.service.AvatarService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.GetMapping;

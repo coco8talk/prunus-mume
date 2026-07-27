@@ -2,9 +2,9 @@ package com.coco8talk.pm.platform.web;
 
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.NotRoleException;
-import com.coco8talk.pm.common.Result;
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.BizException;
+import com.coco8talk.pm.common.result.Result;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;

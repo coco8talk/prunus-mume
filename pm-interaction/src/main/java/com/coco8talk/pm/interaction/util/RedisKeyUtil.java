@@ -1,7 +1,7 @@
 package com.coco8talk.pm.interaction.util;
 
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.ThrowUtils;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.ThrowUtils;
 import org.redisson.api.RBitSet;
 import org.redisson.api.RedissonClient;
 

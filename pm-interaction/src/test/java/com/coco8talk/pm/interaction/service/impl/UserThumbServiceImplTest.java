@@ -3,7 +3,7 @@ package com.coco8talk.pm.interaction.service.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.coco8talk.pm.api.auth.service.CurrentUserProvider;
 import com.coco8talk.pm.api.question.service.QuestionApi;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.common.lock.DistributedLock;
 import com.coco8talk.pm.interaction.mapper.UserThumbMapper;
 import com.coco8talk.pm.interaction.model.entity.UserThumb;

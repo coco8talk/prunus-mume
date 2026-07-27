@@ -1,7 +1,7 @@
 package com.coco8talk.pm.interaction.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.interaction.model.entity.UserFavourite;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.coco8talk.pm.api.question.dto.QuestionForBankVO;

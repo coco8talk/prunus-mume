@@ -1,6 +1,6 @@
 package com.coco8talk.pm.question.bank.service;
 
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 
 /**
  * 题库封面图片生成与存储服务。

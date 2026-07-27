@@ -1,4 +1,4 @@
-package com.coco8talk.pm.common;
+package com.coco8talk.pm.common.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

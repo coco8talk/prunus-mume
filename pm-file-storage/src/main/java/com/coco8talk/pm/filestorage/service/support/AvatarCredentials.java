@@ -1,7 +1,7 @@
 package com.coco8talk.pm.filestorage.service.support;
 
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.ThrowUtils;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.ThrowUtils;
 import com.tencent.cloud.CosStsClient;
 import com.tencent.cloud.Response;
 import lombok.extern.log4j.Log4j2;

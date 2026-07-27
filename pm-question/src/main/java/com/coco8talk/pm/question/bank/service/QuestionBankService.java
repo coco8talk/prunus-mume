@@ -2,7 +2,7 @@ package com.coco8talk.pm.question.bank.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.question.bank.model.dto.AddQuestionBankDTO;
 import com.coco8talk.pm.question.bank.model.dto.DeleteQuestionBankDTO;
 import com.coco8talk.pm.question.bank.model.dto.EditQuestionBankDTO;

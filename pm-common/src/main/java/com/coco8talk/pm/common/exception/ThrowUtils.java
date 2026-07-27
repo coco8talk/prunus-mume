@@ -1,6 +1,6 @@
-package com.coco8talk.pm.common;
+package com.coco8talk.pm.common.exception;
 
-import com.coco8talk.pm.common.HttpStatusEnum;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 
 /**

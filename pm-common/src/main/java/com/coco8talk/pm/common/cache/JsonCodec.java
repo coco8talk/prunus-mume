@@ -1,7 +1,7 @@
 package com.coco8talk.pm.common.cache;
 
-import com.coco8talk.pm.common.BizException;
-import com.coco8talk.pm.common.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.BizException;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 

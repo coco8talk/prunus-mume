@@ -3,8 +3,8 @@ package com.coco8talk.pm.auth;
 import com.coco8talk.pm.api.auth.dto.SessionUserDTO;
 import com.coco8talk.pm.api.auth.enums.UserRoleEnums;
 import com.coco8talk.pm.api.auth.service.CurrentUserProvider;
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.ThrowUtils;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.ThrowUtils;
 import org.springframework.stereotype.Component;
 
 /**

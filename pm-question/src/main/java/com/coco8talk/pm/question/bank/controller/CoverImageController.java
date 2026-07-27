@@ -1,6 +1,6 @@
 package com.coco8talk.pm.question.bank.controller;
 
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.question.bank.service.CoverImageService;
 import com.coco8talk.pm.common.util.IdUtils;
 import cn.dev33.satoken.annotation.SaCheckRole;

@@ -2,7 +2,7 @@ package com.coco8talk.pm.question.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.question.model.dto.QueryQuestionReviewDTO;
 import com.coco8talk.pm.question.model.dto.ReviewQuestionDTO;
 import com.coco8talk.pm.question.model.entity.QuestionReview;

@@ -2,8 +2,8 @@ package com.coco8talk.pm.filestorage.service.impl;
 
 import com.coco8talk.pm.api.user.dto.UserView;
 import com.coco8talk.pm.api.user.service.UserApi;
-import com.coco8talk.pm.common.BizException;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.exception.BizException;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.filestorage.service.support.AvatarCredentials;
 import com.coco8talk.pm.filestorage.service.support.GetKeyService;
 import com.qcloud.cos.COSClient;

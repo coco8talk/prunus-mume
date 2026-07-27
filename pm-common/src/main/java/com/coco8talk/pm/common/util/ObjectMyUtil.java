@@ -1,9 +1,9 @@
 package com.coco8talk.pm.common.util;
 
 
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.BizException;
-import com.coco8talk.pm.common.ThrowUtils;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.exception.BizException;
+import com.coco8talk.pm.common.exception.ThrowUtils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.coco8talk.pm.common;
+package com.coco8talk.pm.common.constant;
 
 /**
  * 全局常量字段

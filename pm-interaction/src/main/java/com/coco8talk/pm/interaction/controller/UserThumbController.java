@@ -1,6 +1,6 @@
 package com.coco8talk.pm.interaction.controller;
 
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.interaction.service.UserThumbService;
 import com.coco8talk.pm.common.util.IdUtils;
 import io.swagger.v3.oas.annotations.Operation;

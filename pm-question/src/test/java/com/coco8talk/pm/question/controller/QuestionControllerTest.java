@@ -1,7 +1,7 @@
 package com.coco8talk.pm.question.controller;
 
-import com.coco8talk.pm.common.HttpStatusEnum;
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.platform.web.GlobalExceptionHandler;
 import com.coco8talk.pm.question.model.vo.QuestionVO;
 import com.coco8talk.pm.question.service.QuestionService;

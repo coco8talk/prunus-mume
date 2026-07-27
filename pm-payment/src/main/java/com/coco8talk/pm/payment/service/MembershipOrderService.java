@@ -1,6 +1,6 @@
 package com.coco8talk.pm.payment.service;
 
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.payment.model.dto.MembershipOrderCreateDTO;
 import com.coco8talk.pm.payment.model.entity.MembershipOrder;
 import com.baomidou.mybatisplus.extension.service.IService;

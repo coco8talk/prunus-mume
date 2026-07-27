@@ -1,6 +1,6 @@
 package com.coco8talk.pm.interaction.service;
 
-import com.coco8talk.pm.common.Result;
+import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.interaction.model.entity.UserThumb;
 import com.baomidou.mybatisplus.extension.service.IService;
 

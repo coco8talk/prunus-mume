@@ -1,8 +1,7 @@
-package com.coco8talk.pm.common;
+package com.coco8talk.pm.common.result.http;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 /**
  * 状态码请求枚举类，用于统一处理Http响应状态

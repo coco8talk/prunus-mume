@@ -1,6 +1,6 @@
 spring:
   application:
-    name: pm-interaction
+    name: pm-auth
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   cloud:
@@ -11,9 +11,3 @@ spring:
   config:
     import:
       - nacos:pm-common.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true
-      - nacos:pm-interaction.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true
-  datasource:
-    password: ${coco8talk.datasource.password:}
-  data:
-    redis:
-      password: ${coco8talk.redis.password:}

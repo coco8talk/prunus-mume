@@ -14,6 +14,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.coco8talk</groupId>
+            <artifactId>pm-common</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-extension</artifactId>
         </dependency>

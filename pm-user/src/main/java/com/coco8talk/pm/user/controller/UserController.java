@@ -28,51 +28,13 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/user")
-@Tag(name = "用户相关接口", description = "提供用户注册登录、个人资料维护以及管理员用户管理能力")
+@Tag(name = "用户相关接口", description = "提供个人资料维护以及管理员用户管理能力（注册/登录/登出已迁移至 pm-auth）")
 public class UserController {
     
     private final UserService userService;
     
     public UserController(UserService userService) {
         this.userService = userService;
-    }
-    
-    /**
-     * 用户注册功能
-     *
-     * @param registerUserDTO 用户注册信息
-     * @return 用户 id
-     */
-    @PostMapping("/register")
-    @Operation(summary = "用户注册", description = "校验注册信息并创建新用户账号，返回生成的用户 ID")
-    public Result<Long> userRegister(@RequestBody @Valid RegisterUserDTO registerUserDTO) {
-        log.info("用户注册请求: {}", registerUserDTO);
-        return userService.userRegister(registerUserDTO);
-    }
-    
-    /**
-     * 用户登录功能
-     *
-     * @param loginUserDTO 用户登录信息
-     * @return 脱敏用户信息（LoginUserVO）
-     */
-    @PostMapping("/login")
-    @Operation(summary = "用户登录", description = "校验账号密码并建立登录会话，返回当前用户的脱敏信息")
-    public Result<LoginUserVO> userLogin(@RequestBody @Valid LoginUserDTO loginUserDTO) {
-        log.info("用户登录请求: {}", loginUserDTO);
-        return userService.userLogin(loginUserDTO);
-    }
-    
-    /**
-     * 用户退出登录态
-     *
-     * @return 处理结果
-     */
-    @PostMapping("/logout")
-    @Operation(summary = "注销用户", description = "注销当前用户会话并清理登录状态")
-    public Result<Void> userLogout() {
-        log.info("用户注销请求");
-        return userService.userLogout();
     }
     
     /**

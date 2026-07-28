@@ -30,6 +30,16 @@ public class AuthConstant {
     public static final int USER_ACCOUNT_MAX_LENGTH = 15;
 
     /**
+     * 用户密码最小长度
+     */
+    public static final int USER_PASSWORD_MIN_LENGTH = 8;
+
+    /**
+     * 用户密码最大长度
+     */
+    public static final int USER_PASSWORD_MAX_LENGTH = 20;
+
+    /**
      * 用户权限最小值
      */
     public static final int USER_ROLE_MIN_VALUE = 0;

@@ -2,10 +2,14 @@ package com.coco8talk.pm.user.service.impl;
 
 import com.coco8talk.pm.api.user.service.UserApi;
 import com.coco8talk.pm.api.auth.dto.SessionUserDTO;
+import com.coco8talk.pm.api.user.dto.LoginUserView;
 import com.coco8talk.pm.api.user.dto.UserView;
+import com.coco8talk.pm.common.exception.ThrowUtils;
+import com.coco8talk.pm.common.result.http.HttpStatusEnum;
 import com.coco8talk.pm.user.convert.UserMapstruct;
 import com.coco8talk.pm.user.model.entity.User;
 import com.coco8talk.pm.user.mapper.UserMapper;
+import com.coco8talk.pm.user.service.support.UserAccountSupport;
 import com.coco8talk.pm.api.auth.enums.UserRoleEnums;
 import org.springframework.stereotype.Component;
 
@@ -21,9 +25,11 @@ import java.util.Objects;
 public class UserApiImpl implements UserApi {
 
     private final UserMapper userMapper;
+    private final UserAccountSupport userAccountSupport;
 
-    public UserApiImpl(UserMapper userMapper) {
+    public UserApiImpl(UserMapper userMapper, UserAccountSupport userAccountSupport) {
         this.userMapper = userMapper;
+        this.userAccountSupport = userAccountSupport;
     }
 
     @Override
@@ -75,6 +81,57 @@ public class UserApiImpl implements UserApi {
         }
         User user = userMapper.selectById(userId);
         return user == null ? null : UserMapstruct.INSTANCE.entityToSessionDto(user);
+    }
+
+    @Override
+    public Long registerAccount(String userAccount, String userPassword) {
+        userAccountSupport.validateUserAccountFormat(userAccount);
+        userAccountSupport.validateUserPasswordFormat(userPassword);
+
+        return userAccountSupport.executeWithUserAccountLock(userAccount, () -> {
+            // 检查账号唯一性
+            userAccountSupport.validateUserAccountExists(userAccount, true);
+
+            // 密码加密
+            String encryptedPassword = userAccountSupport.encryptPassword(userPassword);
+
+            // 保存用户
+            User userToInsert = new User();
+            userToInsert.setUserAccount(userAccount);
+            userToInsert.setUserPassword(encryptedPassword);
+            userToInsert.setUserRole(UserRoleEnums.NORMAL.getCode());
+            boolean saveResult = userMapper.insert(userToInsert) > 0;
+            ThrowUtils.throwIfFalse(saveResult, HttpStatusEnum.INTERNAL_SERVER_ERROR, "数据库写入失败");
+
+            return userToInsert.getId();
+        });
+    }
+
+    @Override
+    public LoginUserView verifyCredentials(String userAccount, String userPassword) {
+        userAccountSupport.validateUserAccountFormat(userAccount);
+        userAccountSupport.validateUserPasswordFormat(userPassword);
+
+        // 检查用户是否存在
+        User userFromDb = userAccountSupport.validateUserAccountExists(userAccount, false);
+
+        // 验证密码
+        boolean isPasswordValid = userAccountSupport.verifyPassword(userPassword, userFromDb.getUserPassword());
+        ThrowUtils.throwIfFalse(isPasswordValid, HttpStatusEnum.BAD_REQUEST, "账号或密码错误");
+
+        return new LoginUserView(
+                userFromDb.getId(),
+                userFromDb.getUserAccount(),
+                userFromDb.getUserAvatar(),
+                userFromDb.getUserRole(),
+                userFromDb.getUserProfile(),
+                userFromDb.getPhoneNumber(),
+                userFromDb.getEmail(),
+                userFromDb.getGrade(),
+                userFromDb.getWorkExperience(),
+                userFromDb.getExpertiseDirection(),
+                userFromDb.getCreateTime(),
+                userFromDb.getUpdateTime());
     }
 
     private static UserView toView(User user) {

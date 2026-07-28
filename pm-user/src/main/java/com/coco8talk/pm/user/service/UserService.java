@@ -18,30 +18,7 @@ import jakarta.validation.Valid;
  * @createDate 2025-06-22 23:21:20
  */
 public interface UserService extends IService<User> {
-    
-    /**
-     * 用户注册功能
-     *
-     * @param registerUserDTO 用户注册信息
-     * @return 用户 id
-     */
-    Result<Long> userRegister(RegisterUserDTO registerUserDTO);
-    
-    /**
-     * 用户登录功能
-     *
-     * @param loginUserDTO 用户登录信息
-     * @return 脱敏用户信息（LoginUserVO）
-     */
-    Result<LoginUserVO> userLogin(@Valid LoginUserDTO loginUserDTO);
-    
-    /**
-     * 用户退出登录态
-     *
-     * @return 处理结果
-     */
-    Result<Void> userLogout();
-    
+
     /**
      * 管理员创建用户（管理员）
      *

@@ -7,6 +7,7 @@ import com.coco8talk.pm.platform.web.GlobalExceptionHandler;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.Import;
 
 @MapperScan("com.coco8talk.pm.user.mapper")
@@ -20,6 +21,7 @@ import org.springframework.context.annotation.Import;
         "com.coco8talk.pm.user",
         "com.coco8talk.pm.auth"
 })
+@EnableDiscoveryClient
 public class PmUserApplication {
 
     public static void main(String[] args) {

@@ -1,11 +1,14 @@
 package com.coco8talk.pm.api.user.client;
 
 import com.coco8talk.pm.api.auth.dto.SessionUserDTO;
+import com.coco8talk.pm.api.user.dto.LoginUserView;
 import com.coco8talk.pm.api.user.dto.UserView;
 import com.coco8talk.pm.api.user.service.UserApi;
+import com.coco8talk.pm.common.exception.BizException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClient;
 
 import java.time.Period;
@@ -77,5 +80,41 @@ public class RemoteUserApi implements UserApi {
                 .body(Map.of("avatarUrl", avatarUrl))
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    @Override
+    public Long registerAccount(String userAccount, String userPassword) {
+        try {
+            return restClient.post()
+                    .uri("/register")
+                    .body(new RegisterAccountRequest(userAccount, userPassword))
+                    .retrieve()
+                    .body(Long.class);
+        } catch (HttpStatusCodeException e) {
+            throw toBizException(e);
+        }
+    }
+
+    @Override
+    public LoginUserView verifyCredentials(String userAccount, String userPassword) {
+        try {
+            return restClient.post()
+                    .uri("/verify-credentials")
+                    .body(new VerifyCredentialsRequest(userAccount, userPassword))
+                    .retrieve()
+                    .body(LoginUserView.class);
+        } catch (HttpStatusCodeException e) {
+            throw toBizException(e);
+        }
+    }
+
+    private static BizException toBizException(HttpStatusCodeException e) {
+        return new BizException(e.getStatusCode().value(), e.getResponseBodyAsString());
+    }
+
+    private record RegisterAccountRequest(String userAccount, String userPassword) {
+    }
+
+    private record VerifyCredentialsRequest(String userAccount, String userPassword) {
     }
 }

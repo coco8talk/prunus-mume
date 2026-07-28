@@ -1,6 +1,7 @@
 package com.coco8talk.pm.api.user.service;
 
 import com.coco8talk.pm.api.auth.dto.SessionUserDTO;
+import com.coco8talk.pm.api.user.dto.LoginUserView;
 import com.coco8talk.pm.api.user.dto.UserView;
 
 import java.time.Period;
@@ -23,4 +24,10 @@ public interface UserApi {
     SessionUserDTO toSessionDto(Long userId);
 
     void updateAvatar(Long userId, String avatarUrl);
+
+    /** 校验账号/密码格式并创建新账号，返回新用户 id；账号已存在等业务错误以 BizException 抛出。 */
+    Long registerAccount(String userAccount, String userPassword);
+
+    /** 校验账号密码是否匹配，成功返回登录所需的脱敏用户信息；账号不存在或密码错误以 BizException 抛出。 */
+    LoginUserView verifyCredentials(String userAccount, String userPassword);
 }

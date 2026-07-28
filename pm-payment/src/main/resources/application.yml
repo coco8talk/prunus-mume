@@ -1,36 +1,24 @@
 spring:
   application:
     name: pm-payment
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        namespace: ${NACOS_NAMESPACE:}
+  config:
+    import:
+      - nacos:pm-common.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true
+      - nacos:pm-payment.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${coco8talk.datasource.host:localhost}:3306/${coco8talk.datasource.database:interview_practice_platform}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: ${coco8talk.datasource.username:root}
     password: ${coco8talk.datasource.password:}
-    type: com.alibaba.druid.pool.DruidDataSource
-
-server:
-  port: 8089
-  servlet:
-    context-path: /api
-
-mybatis-plus:
-  mapper-locations: classpath*:mapper/*.xml
-  type-aliases-package: com.coco8talk.pm.payment.model.entity
-  configuration:
-    map-underscore-to-camel-case: true
-  global-config:
-    db-config:
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
 
 coco8talk:
+  # workId 是雪花算法工作节点号：同服务多实例必须互不相同，绝不能作为 Nacos 共享配置统一下发，否则多实例 ID 会撞车
   snowflake:
     workId: ${SNOWFLAKE_WORK_ID:0}
   alipay:
-    gateway-url: ${ALIPAY_GATEWAY_URL:https://openapi-sandbox.dl.alipaydev.com/gateway.do}
-    app-id: ${ALIPAY_APP_ID:}
     alipayPublicKey: ${ALIPAY_PUBLIC_KEY:}
     privateKey: ${ALIPAY_PRIVATE_KEY:}
-    notify-url: ${ALIPAY_NOTIFY_URL:http://localhost:8089/api/alipay/callback}
-    return-url: ${ALIPAY_RETURN_URL:http://localhost:8089/api/alipay/return}

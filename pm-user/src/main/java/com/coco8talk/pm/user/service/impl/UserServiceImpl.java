@@ -1,19 +1,14 @@
 package com.coco8talk.pm.user.service.impl;
 
-import at.favre.lib.crypto.bcrypt.BCrypt;
-import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.coco8talk.pm.api.auth.service.AuthSessionApi;
 import com.coco8talk.pm.api.auth.dto.SessionUserDTO;
 import com.coco8talk.pm.api.auth.enums.UserRoleEnums;
-import com.coco8talk.pm.common.constant.CommonConstant;
 import com.coco8talk.pm.common.result.http.HttpStatusEnum;
-import com.coco8talk.pm.common.exception.BizException;
 import com.coco8talk.pm.common.exception.ThrowUtils;
 import com.coco8talk.pm.common.result.Result;
-import com.coco8talk.pm.common.util.ClientUtil;
 import com.coco8talk.pm.common.util.DtoValidationUtil;
 import com.coco8talk.pm.common.util.ObjectMyUtil;
 import com.coco8talk.pm.common.util.QueryWrapperUtil;
@@ -27,14 +22,12 @@ import com.coco8talk.pm.user.model.vo.LoginUserVO;
 import com.coco8talk.pm.user.model.vo.UserForAdminVO;
 import com.coco8talk.pm.user.model.vo.UserVO;
 import com.coco8talk.pm.user.service.UserService;
+import com.coco8talk.pm.user.service.support.UserAccountSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
@@ -48,93 +41,17 @@ import java.util.regex.Pattern;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService {
-    
-    private final RedissonClient redissonClient;
+
+    private final UserAccountSupport userAccountSupport;
     private final AuthSessionApi authSessionApi;
     private final java.util.List<UserDeletionCleaner> deletionCleaners;
 
-    public UserServiceImpl(RedissonClient redissonClient, AuthSessionApi authSessionApi, java.util.List<UserDeletionCleaner> deletionCleaners) {
-        this.redissonClient = redissonClient;
+    public UserServiceImpl(UserAccountSupport userAccountSupport, AuthSessionApi authSessionApi, java.util.List<UserDeletionCleaner> deletionCleaners) {
+        this.userAccountSupport = userAccountSupport;
         this.authSessionApi = authSessionApi;
         this.deletionCleaners = deletionCleaners;
     }
-    
-    // ========== 用户认证接口 ==========
-    
-    /**
-     * 用户注册
-     */
-    @Override
-    public Result<Long> userRegister(RegisterUserDTO registerUserDTO) {
-        String userAccount = registerUserDTO.getUserAccount();
-        String userPassword = registerUserDTO.getUserPassword();
-        String checkPassword = registerUserDTO.getCheckPassword();
-        
-        // 参数校验
-        validateUserAccountFormat(userAccount);
-        validateUserPasswordFormat(userPassword);
-        validateUserPasswordFormat(checkPassword);
-        ThrowUtils.throwIfFalse(userPassword.equals(checkPassword), HttpStatusEnum.BAD_REQUEST, "密码不匹配");
-        
-        return executeWithUserAccountLock(userAccount, () -> {
-            // 检查账号唯一性
-            validateUserAccountExists(userAccount, true);
-            
-            // 密码加密
-            String encryptedPassword = encryptPassword(userPassword);
-            
-            // 保存用户
-            User userToInsert = new User();
-            userToInsert.setUserAccount(userAccount);
-            userToInsert.setUserPassword(encryptedPassword);
-            userToInsert.setUserRole(UserRoleEnums.NORMAL.getCode());
-            boolean saveResult = this.save(userToInsert);
-            ThrowUtils.throwIfFalse(saveResult, HttpStatusEnum.INTERNAL_SERVER_ERROR, "数据库写入失败");
-            
-            return Result.success(HttpStatusEnum.OK, userToInsert.getId());
-        });
-    }
-    
-    /**
-     * 用户登录
-     */
-    @Override
-    public Result<LoginUserVO> userLogin(LoginUserDTO loginUserDTO) {
-        String userAccount = loginUserDTO.getUserAccount();
-        String userPassword = loginUserDTO.getUserPassword();
-        
-        // 参数校验
-        validateUserAccountFormat(userAccount);
-        validateUserPasswordFormat(userPassword);
-        
-        // 检查用户是否存在
-        User userFromDb = this.validateUserAccountExists(userAccount, false);
-        
-        // 验证密码
-        assert userFromDb != null;
-        boolean isPasswordValid = verifyPassword(userPassword, userFromDb.getUserPassword());
-        ThrowUtils.throwIfFalse(isPasswordValid, HttpStatusEnum.BAD_REQUEST, "账号或密码错误");
-        
-        // 设置新会话
-        SessionUserDTO sessionUserDTO = UserMapstruct.INSTANCE.entityToSessionDto(userFromDb);
-        StpUtil.login(userFromDb.getId(), ClientUtil.getRequestDevice());
-        authSessionApi.login(sessionUserDTO);
-        
-        // 返回脱敏信息
-        LoginUserVO loginUserVO = UserMapstruct.INSTANCE.entityToLoginVo(userFromDb);
-        return Result.success(HttpStatusEnum.OK, loginUserVO);
-    }
-    
-    /**
-     * 用户退出登录
-     */
-    @Override
-    public Result<Void> userLogout() {
-        authSessionApi.currentSession();
-        authSessionApi.logout();
-        return Result.success(HttpStatusEnum.NO_CONTENT);
-    }
-    
+
     // ========== 管理员接口 ==========
     
     /**
@@ -143,19 +60,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public Result<Long> adminCreateUser(CreateUserDTO createUserDTO) {
         String userAccount = createUserDTO.getUserAccount();
-        
+
         // 参数校验
-        validateUserAccountFormat(userAccount);
+        userAccountSupport.validateUserAccountFormat(userAccount);
         validateUserNameFormat(createUserDTO.getUserName());
         validateUserRoleFormat(createUserDTO.getUserRole());
-        validateUserAccountExists(userAccount, true);
-        
-        return executeWithUserAccountLock(userAccount, () -> {
+        userAccountSupport.validateUserAccountExists(userAccount, true);
+
+        return userAccountSupport.executeWithUserAccountLock(userAccount, () -> {
             // 再次检查账号唯一性
-            validateUserAccountExists(userAccount, true);
-            
+            userAccountSupport.validateUserAccountExists(userAccount, true);
+
             // 创建默认密码并加密
-            String encryptedPassword = encryptPassword(UserConstant.USER_DEFAULT_PASSWORD);
+            String encryptedPassword = userAccountSupport.encryptPassword(UserConstant.USER_DEFAULT_PASSWORD);
             
             // 保存用户
             User userToInsert = UserMapstruct.INSTANCE.addDtoToEntity(createUserDTO);
@@ -285,27 +202,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public Result<Void> userEditOwnPassword(EditOwnPasswordDTO editOwnPasswordDTO) {
         // 参数校验
-        validateUserPasswordFormat(editOwnPasswordDTO.getPassword());
-        validateUserPasswordFormat(editOwnPasswordDTO.getCheckPassword());
-        
+        userAccountSupport.validateUserPasswordFormat(editOwnPasswordDTO.getPassword());
+        userAccountSupport.validateUserPasswordFormat(editOwnPasswordDTO.getCheckPassword());
+
         String newPassword = editOwnPasswordDTO.getPassword();
         ThrowUtils.throwIfFalse(
             newPassword.equals(editOwnPasswordDTO.getCheckPassword()),
             HttpStatusEnum.BAD_REQUEST,
             "两次密码输入不一致");
-        
+
         // 获取当前用户
         SessionUserDTO currentUserSession = authSessionApi.currentSession();
         User currentUser = this.getById(currentUserSession.getId());
         ThrowUtils.throwIfNull(currentUser, HttpStatusEnum.BAD_REQUEST, "数据库中不存在当前用户信息");
         String userPassword = currentUser.getUserPassword();
-        
+
         // 检查新旧密码是否一致
-        boolean isSamePassword = verifyPassword(newPassword, userPassword);
+        boolean isSamePassword = userAccountSupport.verifyPassword(newPassword, userPassword);
         ThrowUtils.throwIfTrue(isSamePassword, HttpStatusEnum.BAD_REQUEST, "新密码与旧密码不可相同");
-        
+
         // 密码加密
-        String encryptedPassword = encryptPassword(newPassword);
+        String encryptedPassword = userAccountSupport.encryptPassword(newPassword);
         
         // 更新密码
         User userToDb = new User();
@@ -393,62 +310,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
     
     // ========== 私有方法 ==========
-    
-    /**
-     * 使用分布式锁执行用户账号相关操作
-     */
-    private <T> T executeWithUserAccountLock(String userAccount, UserAccountLockCallback<T> callback) {
-        RLock lock = redissonClient.getLock(CommonConstant.USER_ACCOUNT_LOCK_PREFIX + userAccount);
-        try {
-            boolean isLocked = lock.tryLock(CommonConstant.LOCK_WAIT_TIME_SECONDS, TimeUnit.SECONDS);
-            ThrowUtils.throwIfFalse(isLocked, HttpStatusEnum.TOO_MANY_REQUESTS, "当前请求过多，请稍后再试");
-            
-            return callback.execute();
-        } catch (InterruptedException e) {
-            throw new BizException(HttpStatusEnum.REQUEST_TIMEOUT.getCode(), "线程中断");
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
-    }
-    
-    /**
-     * 用户账号锁回调接口
-     */
-    @FunctionalInterface
-    private interface UserAccountLockCallback<T> {
-        /**
-         * 执行被锁定的操作
-         *
-         * @return 操作结果
-         */
-        T execute();
-    }
-    
-    /**
-     * 密码加密
-     */
-    private String encryptPassword(String password) {
-        try {
-            return BCrypt.withDefaults().hashToString(CommonConstant.BCRYPT_ROUNDS, password.toCharArray());
-        } catch (Exception e) {
-            throw new BizException(HttpStatusEnum.INTERNAL_SERVER_ERROR.getCode(), "密码加密失败");
-        }
-    }
-    
-    /**
-     * 验证密码
-     */
-    private boolean verifyPassword(String password, String hashedPassword) {
-        try {
-            BCrypt.Result verifyResult = BCrypt.verifyer().verify(password.toCharArray(), hashedPassword);
-            return verifyResult.verified;
-        } catch (Exception e) {
-            throw new BizException(HttpStatusEnum.INTERNAL_SERVER_ERROR.getCode(), "密码验证失败");
-        }
-    }
-    
+
     /**
      * 创建查询条件
      */
@@ -479,41 +341,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
     
     // ========== 校验方法 ==========
-    
-    /**
-     * 验证用户账号是否存在
-     */
-    private User validateUserAccountExists(String userAccount, boolean isRegister) {
-        ThrowUtils.throwIfBlank(userAccount, HttpStatusEnum.BAD_REQUEST, "用户账号不能为空");
-        
-        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getUserAccount, userAccount);
-        User userFromDb = this.getOne(wrapper);
-        
-        if (isRegister) {
-            // 注册时检查账号是否已存在
-            ThrowUtils.throwIfNotNull(userFromDb, HttpStatusEnum.BAD_REQUEST, "该用户账号已存在，请更换后重试");
-            return null;
-        } else {
-            // 登录时检查账号是否存在
-            ThrowUtils.throwIfNull(userFromDb, HttpStatusEnum.BAD_REQUEST, "用户账号不存在");
-            return userFromDb;
-        }
-    }
-    
-    /**
-     * 验证用户账号格式
-     */
-    private void validateUserAccountFormat(String userAccount) {
-        ThrowUtils.throwIfFalse(StringUtils.isNotBlank(userAccount) && userAccount.length() >= UserConstant.USER_ACCOUNT_MIN_LENGTH && userAccount.length() <= UserConstant.USER_ACCOUNT_MAX_LENGTH,
-            HttpStatusEnum.BAD_REQUEST, "用户账号长度必须在" + UserConstant.USER_ACCOUNT_MIN_LENGTH + "-" + UserConstant.USER_ACCOUNT_MAX_LENGTH + "个字符之间");
-        
-        // 检查是否包含特殊字符
-        Pattern pattern = Pattern.compile(UserConstant.USER_ACCOUNT_FORMAT_REGEX);
-        ThrowUtils.throwIfFalse(pattern.matcher(userAccount).matches(),
-            HttpStatusEnum.BAD_REQUEST, "用户账号只能包含字母、数字和下划线");
-    }
-    
+
     /**
      * 验证用户名格式
      */
@@ -534,14 +362,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             userRole.equals(UserRoleEnums.NORMAL.getCode()) ||
             userRole.equals(UserRoleEnums.VIP.getCode());
         ThrowUtils.throwIfFalse(isValidRole, HttpStatusEnum.BAD_REQUEST, "用户权限不合法");
-    }
-    
-    /**
-     * 验证用户密码格式
-     */
-    private void validateUserPasswordFormat(String userPassword) {
-        ThrowUtils.throwIfFalse(StringUtils.isNotBlank(userPassword) && userPassword.length() >= UserConstant.USER_PASSWORD_MIN_LENGTH && userPassword.length() <= UserConstant.USER_PASSWORD_MAX_LENGTH,
-            HttpStatusEnum.BAD_REQUEST, "用户密码长度必须在" + UserConstant.USER_PASSWORD_MIN_LENGTH + "-" + UserConstant.USER_PASSWORD_MAX_LENGTH + "个字符之间");
     }
     
     /**

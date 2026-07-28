@@ -3,24 +3,85 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent><groupId>com.coco8talk</groupId><artifactId>prunus-mume</artifactId><version>${revision}</version></parent>
+    <parent>
+        <groupId>com.coco8talk</groupId>
+        <artifactId>prunus-mume</artifactId>
+        <version>${revision}</version>
+    </parent>
     <artifactId>pm-file-storage</artifactId>
     <dependencies>
-        <dependency><groupId>com.coco8talk</groupId><artifactId>pm-common</artifactId></dependency>
-        <dependency><groupId>com.coco8talk</groupId><artifactId>pm-platform</artifactId></dependency>
-        <dependency><groupId>com.coco8talk</groupId><artifactId>pm-api</artifactId></dependency>
-        <dependency><groupId>com.coco8talk</groupId><artifactId>pm-auth</artifactId></dependency>
-        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
-        <dependency><groupId>cn.dev33</groupId><artifactId>sa-token-spring-boot3-starter</artifactId></dependency>
-        <dependency><groupId>cn.hutool</groupId><artifactId>hutool-all</artifactId></dependency>
         <dependency>
-            <groupId>com.qcloud</groupId><artifactId>cos_api</artifactId>
-            <exclusions><exclusion><groupId>org.bouncycastle</groupId><artifactId>bcprov-jdk15on</artifactId></exclusion></exclusions>
+            <groupId>com.coco8talk</groupId>
+            <artifactId>pm-common</artifactId>
         </dependency>
-        <dependency><groupId>com.qcloud</groupId><artifactId>cos-sts_api</artifactId></dependency>
-        <dependency><groupId>org.bouncycastle</groupId><artifactId>bcprov-jdk18on</artifactId></dependency>
-        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional></dependency>
-        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+        <dependency>
+            <groupId>com.coco8talk</groupId>
+            <artifactId>pm-platform</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.coco8talk</groupId>
+            <artifactId>pm-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.coco8talk</groupId>
+            <artifactId>pm-auth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qcloud</groupId>
+            <artifactId>cos_api</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.qcloud</groupId>
+            <artifactId>cos-sts_api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
     </dependencies>
-    <build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin></plugins></build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

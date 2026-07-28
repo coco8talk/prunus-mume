@@ -1,29 +1,14 @@
 spring:
   application:
     name: pm-file-storage
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      database: ${REDIS_DATABASE:0}
-
-server:
-  port: 8092
-  servlet:
-    context-path: /api
-
-sa-token:
-  token-name: ${SA_TOKEN_NAME:satoken}
-  timeout: ${SA_TOKEN_TIMEOUT:2592000}
-  active-timeout: ${SA_TOKEN_ACTIVE_TIMEOUT:1800}
-  is-concurrent: ${SA_TOKEN_IS_CONCURRENT:true}
-  is-share: ${SA_TOKEN_IS_SHARE:true}
-
-coco8talk:
-  tencent:
-    cos:
-      appId: ${TENCENT_COS_APP_ID:}
-      secretId: ${TENCENT_COS_SECRET_ID:}
-      secretKey: ${TENCENT_COS_SECRET_KEY:}
-      region: ${TENCENT_COS_REGION:}
-      bucketName: ${TENCENT_COS_BUCKET_NAME:}
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        namespace: ${NACOS_NAMESPACE:public}
+  config:
+    import:
+      - nacos:pm-common.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true
+      - nacos:pm-file-storage.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true

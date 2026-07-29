@@ -1,0 +1,98 @@
+{
+  "project": {
+    "name": "Prunus Mume - Personal Center",
+    "workingDirectory": "frontend/client",
+    "mode": "extend_existing_project",
+    "instruction": "Continue from the current project. Do not redesign the existing home page, Header, question-bank pages, or question pages."
+  },
+  "references": [
+    "Current project implementation after Stage 1",
+    "app/globals.css",
+    "opendesign-prompt-client.json"
+  ],
+  "prerequisites": [
+    "Stage 1 core learning routes and shared navigation are complete.",
+    "The existing Meiwen visual system remains the source of truth."
+  ],
+  "designContinuity": [
+    "Strictly continue the established plum and burgundy palette, near-white background, white cards, thin borders, generous whitespace, restrained typography, and end-user education-product character.",
+    "Do not introduce a new design system, component library, dashboard aesthetic, or unrelated information architecture.",
+    "Reuse existing shared components and interaction patterns where practical without rewriting completed pages."
+  ],
+  "objective": "Complete the signed-in user's personal workflows for favourites, contributions, daily sign-in, profile management, and public profile viewing.",
+  "routes": [
+    {
+      "path": "/me/favourites",
+      "name": "My Favourites",
+      "requirements": [
+        "Show the current user's favourited questions.",
+        "Provide keyword search, tag and difficulty filters, pagination, remove-from-favourites actions, and an empty state.",
+        "Removing a favourite must update the mock list immediately."
+      ]
+    },
+    {
+      "path": "/me/contributions",
+      "name": "Submit and Manage Contributions",
+      "requirements": [
+        "Create two clear areas or tabs: Submit New Question and My Contributions.",
+        "The submission form must include title, content, answer, tags, difficulty, and whether the author recommends VIP-only access.",
+        "Contribution records must show Pending Review, Approved, and Rejected states.",
+        "Support viewing, editing, and deleting mock contributions.",
+        "Require confirmation before deletion.",
+        "Show the review comment for a rejected contribution."
+      ]
+    },
+    {
+      "path": "/me/sign-in",
+      "name": "Daily Sign-In",
+      "requirements": [
+        "Use a monthly calendar to display sign-in records.",
+        "Show the current streak, current-month sign-in count, and today's state.",
+        "The Sign In Today action must immediately update the calendar and statistics.",
+        "Prevent duplicate sign-in after today's action is complete.",
+        "Allow year and month switching with corresponding mock records."
+      ]
+    },
+    {
+      "path": "/me/profile",
+      "name": "My Profile",
+      "requirements": [
+        "Provide profile viewing and editing for avatar, display name, bio, phone number, email, grade, work experience, and expertise direction.",
+        "Provide a separate change-password section.",
+        "Implement local avatar preview without connecting to the real upload service.",
+        "Support edit, save, cancel, validation-error, and save-success states."
+      ]
+    },
+    {
+      "path": "/users/[userId]",
+      "name": "Public User Profile",
+      "requirements": [
+        "Show only public information: avatar, display name, role, bio, join date, and a summary of public question banks or contributions.",
+        "Never show account name, phone number, email, or other private fields."
+      ]
+    }
+  ],
+  "personalNavigation": [
+    "Complete the avatar menu or personal-center navigation so users can switch between Favourites, Contributions, Daily Sign-In, and Profile.",
+    "Use a desktop side navigation only where it fits the established layout.",
+    "Provide a mobile-appropriate navigation pattern instead of copying a desktop sidebar onto a small screen.",
+    "Keep active states and route transitions consistent with the shared application navigation."
+  ],
+  "implementationConstraints": [
+    "Continue using structured TypeScript mock data and genuinely interactive local state.",
+    "Do not connect to the backend in this stage.",
+    "Do not add social feeds, rankings, direct messages, admin tools, or other features outside opendesign-prompt-client.json.",
+    "Provide loading, empty, validation, error, confirmation, and success feedback where applicable.",
+    "Maintain keyboard accessibility, visible focus states, semantic markup, and appropriate ARIA labels.",
+    "Preserve and extend stable data-od-id attributes.",
+    "Support approximately 390px mobile width without horizontal scrolling.",
+    "Update affected tests to reflect the current product instead of the original starter skeleton."
+  ],
+  "acceptanceCriteria": [
+    "All five routes can be opened directly and are connected through personal-center navigation.",
+    "Removing a favourite, creating or editing a contribution, signing in today, editing a profile, and previewing an avatar are interactive.",
+    "Private profile fields never appear on the public profile route.",
+    "Forms and confirmation dialogs remain usable on mobile.",
+    "The project passes TypeScript, lint, and build checks."
+  ]
+}

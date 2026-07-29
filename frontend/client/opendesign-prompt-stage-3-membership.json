@@ -1,0 +1,68 @@
+{
+  "project": {
+    "name": "Prunus Mume - Membership and Payment Result",
+    "workingDirectory": "frontend/client",
+    "mode": "extend_existing_project",
+    "instruction": "Continue from the current project. Only implement membership purchase and payment-result experiences. Do not rewrite completed pages or introduce a new visual system."
+  },
+  "references": [
+    "Current project implementation after Stages 1 and 2",
+    "app/globals.css",
+    "opendesign-prompt-client.json"
+  ],
+  "designContinuity": [
+    "Continue the existing plum and deep-burgundy membership styling, white cards, thin borders, generous whitespace, and restrained Chinese education-product visual language.",
+    "Do not turn the membership page into an exaggerated marketing landing page.",
+    "Avoid artificial urgency, fake scarcity, excessive gradients, oversized illustrations, and unrelated promotional features."
+  ],
+  "objective": "Complete a clear and trustworthy membership selection, mock order creation, and payment-result flow.",
+  "routes": [
+    {
+      "path": "/membership",
+      "name": "Membership Upgrade",
+      "requirements": [
+        "Explain membership value in a concise product-oriented introduction.",
+        "Provide a clear comparison of membership benefits.",
+        "Support MONTH, QUARTER, YEAR, and TRIAL duration options.",
+        "Visually emphasize a recommended option without using manipulative urgency.",
+        "Show an order summary with amount, CNY currency, Alipay payment method, and service notes.",
+        "The primary purchase action must support signed-out guidance, submitting, creation-failed, and creation-success states.",
+        "Use a mock order for this stage.",
+        "After mock creation succeeds, simulate leaving for payment and provide a demonstration path to the payment-result route."
+      ]
+    },
+    {
+      "path": "/membership/return",
+      "name": "Payment Result",
+      "requirements": [
+        "Support Success, Processing, and Failed result states.",
+        "Show order number, selected plan, amount, and appropriate next actions.",
+        "For Success, provide Start Practicing and Browse VIP Questions actions.",
+        "For Failed, provide Retry Payment and Return to Membership actions."
+      ]
+    }
+  ],
+  "crossPageUpdates": [
+    "Unify VIP badges and upgrade entry points across question detail, question-bank question lists, and the existing home-page VIP card.",
+    "Every VIP upgrade entry point must navigate to /membership.",
+    "Use the same terminology, badge appearance, and gating explanation throughout the application."
+  ],
+  "implementationConstraints": [
+    "Use mock membership plans and mock orders in this stage.",
+    "Do not call Alipay or any real payment service yet.",
+    "Do not request a payment HTML page through fetch or XHR. The later real integration must use full-page browser navigation.",
+    "Do not add automatic renewal, coupons, refund management, or features outside the original specification.",
+    "Maintain keyboard accessibility, visible focus states, semantic markup, and appropriate ARIA labels.",
+    "Preserve and extend stable data-od-id attributes.",
+    "Support desktop, tablet, and approximately 390px mobile widths without horizontal scrolling.",
+    "Update affected tests to match the current application."
+  ],
+  "acceptanceCriteria": [
+    "Changing the selected membership duration correctly updates the order summary.",
+    "Signed-out, submitting, failure, and success purchase states can all be demonstrated.",
+    "Success, Processing, and Failed payment results can all be demonstrated.",
+    "Every existing VIP entry point reaches the membership page.",
+    "Desktop and mobile layouts are complete.",
+    "The project passes TypeScript, lint, and build checks."
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "project": {
+    "name": "Prunus Mume - Backend Integration",
+    "workingDirectory": "frontend/client",
+    "mode": "integrate_existing_frontend",
+    "instruction": "Connect the completed Meiwen frontend to the real backend. Replace the data and identity layers only. Do not redesign the UI, expand the business scope, or rewrite completed components without a concrete integration requirement."
+  },
+  "references": [
+    "Current project implementation after Stages 1, 2, and 3",
+    "opendesign-prompt-client.json"
+  ],
+  "sourceOfTruth": "Use opendesign-prompt-client.json as the sole source of truth for endpoints, request fields, response fields, pagination shapes, authentication behavior, VIP rules, and payment exceptions.",
+  "objective": "Replace structured frontend mocks with real API calls while preserving the completed user experience and visual design.",
+  "preImplementationTask": [
+    "Before modifying data access, produce a concise mapping of every current mock module to its corresponding backend endpoint.",
+    "Replace mocks page by page instead of performing a large component rewrite.",
+    "Identify any specification mismatch before making assumptions."
+  ],
+  "apiClient": {
+    "requirements": [
+      "Configure the API base URL through an environment variable. Do not hard-code a backend host.",
+      "Create a shared API client for the standard response envelope: { code, data, message }.",
+      "Treat every non-success code as an error and surface the backend message to the user.",
+      "Handle request cancellation or stale responses where search and filtering can issue overlapping requests.",
+      "Keep API response types explicit and close to the source specification."
+    ]
+  },
+  "authentication": {
+    "mechanism": "Sa-Token session authentication using the default token name satoken",
+    "requirements": [
+      "Support cookie-based sessions and send credentials when cross-origin configuration requires it.",
+      "If the backend returns satoken through an accessible response header instead of a cookie, capture and persist it safely according to the backend deployment mode.",
+      "Implement current-user loading, protected routes, login restoration after refresh, and logout.",
+      "Redirect or guide signed-out users appropriately without losing their intended return route.",
+      "Do not implement a second authentication system."
+    ]
+  },
+  "dataIntegration": [
+    "Replace mock data with the real endpoints for question-bank search and detail.",
+    "Replace mock data with the real endpoints for question search and detail.",
+    "Connect favourite status, favourite count, add favourite, and remove favourite.",
+    "Connect like status, like count, add like, and remove like.",
+    "Connect contribution creation, listing, editing, and deletion.",
+    "Connect today's sign-in state, sign-in action, monthly count, and monthly sign-in records.",
+    "Connect current-user profile loading and editing, public profile loading, and password change.",
+    "Connect membership order creation and the payment flow.",
+    "Keep a clearly named development mock switch only when it is necessary for local demonstration. Never mix mock and real data silently."
+  ],
+  "pagination": [
+    "Normalize list responses shaped as { records, total, size, current } when they appear under data.",
+    "Use the existing shared pagination UI and preserve filters while changing pages.",
+    "Reset to the first page when a filter change invalidates the current page."
+  ],
+  "vipRules": [
+    "When needVip is true and the current user is not an active VIP, the frontend must not render or expose the raw answer.",
+    "Treat userRole 2 as VIP and honor vipExpireTime when the backend provides it.",
+    "Keep the existing upgrade UI and route non-members to /membership."
+  ],
+  "avatarUpload": [
+    "Request upload credentials using GET /avatar/getAvatarCredentials.",
+    "Upload the file directly using the returned credentials.",
+    "Confirm completion using GET /avatar/confirmAvatarUpload.",
+    "Update the profile only after confirmation returns the final avatar URL.",
+    "Provide upload progress, failure, retry, and successful-preview states."
+  ],
+  "paymentRules": [
+    "Create the membership order with POST /alipay/submit.",
+    "Navigate the browser to /alipay/pay/{outTradeNo} as a full-page navigation.",
+    "Treat /alipay/pay/{outTradeNo} and /alipay/return as HTML navigation endpoints, not JSON APIs.",
+    "Never fetch the payment HTML through XHR or the shared JSON API client."
+  ],
+  "securityAndScope": [
+    "Never call an endpoint whose path or controller starts with Internal or /internal.",
+    "Do not expose private user fields on public profile pages.",
+    "Do not expose VIP answers in rendered HTML, serialized page state, or client-side mock fallbacks for unauthorized users.",
+    "Do not add new backend endpoints or features outside the source specification."
+  ],
+  "stateHandling": [
+    "Preserve the completed loading, empty, validation, error, confirmation, and success interfaces.",
+    "Replace mock transitions with authoritative server responses.",
+    "Use optimistic updates only where rollback behavior is clear, such as like or favourite toggles.",
+    "Prevent duplicate submissions for sign-in, contribution forms, profile saving, and membership order creation."
+  ],
+  "acceptanceCriteria": [
+    "A successful login survives refresh and logout removes access to protected pages.",
+    "Question-bank search, question search, pagination, favourites, likes, contributions, sign-in, profile editing, and membership order creation call the specified real endpoints.",
+    "Backend error messages are visible to the user and failures never occur silently.",
+    "Unauthorized users cannot access VIP answers.",
+    "Payment uses full-page navigation rather than fetch or XHR.",
+    "The UI remains visually consistent with the pre-integration version.",
+    "The project passes TypeScript, lint, build, and updated application tests."
+  ]
+}

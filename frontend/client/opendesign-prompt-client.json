@@ -1,0 +1,602 @@
+{
+  "project": {
+    "name": "Prunus Mume - Question Bank Client App",
+    "type": "web application (end-user facing)",
+    "description": "A quiz/question-bank learning platform where users browse question banks, practice questions, favourite and like questions, contribute new questions for review, maintain a daily sign-in streak, and purchase membership for premium (VIP-only) content.",
+    "targetUsers": "General end users who study, practice, and contribute questions.",
+    "techStack": {
+      "framework": "React",
+      "language": "TypeScript",
+      "notes": "Generate a complete, runnable frontend project (routing, state management, API client layer, forms, responsive layout). No preference on component library; choose one that fits a clean modern UI."
+    }
+  },
+  "designStyle": {
+    "preference": "unspecified",
+    "notes": "No fixed visual direction requested. Use your own judgment for a clean, responsive, accessible UI. Must work well on both desktop and mobile widths."
+  },
+  "auth": {
+    "mechanism": "Session-token based auth using the Sa-Token framework (server default token name 'satoken').",
+    "flow": [
+      "User registers via POST /auth/register, then logs in via POST /auth/login.",
+      "On successful login the server establishes a session and returns the token via response header/cookie named 'satoken' (Sa-Token default) alongside the user profile in the response body.",
+      "The frontend must persist this token (cookie is handled automatically by the browser if using cookie mode; otherwise capture the response header) and send it back on every subsequent authenticated request.",
+      "Call POST /auth/logout to end the session."
+    ],
+    "responseEnvelope": "Every backend endpoint returns a JSON envelope: { \"code\": number, \"data\": <payload or null>, \"message\": string }. Treat a non-success code as an error and surface `message` to the user."
+  },
+  "apiBaseUrl": "",
+  "pages": [
+    {
+      "name": "Login",
+      "route": "/login",
+      "description": "User signs in with account and password.",
+      "components": ["LoginForm"],
+      "apis": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "description": "Authenticate user and start session",
+          "requestFields": [
+            {"name": "userAccount", "type": "string", "required": true, "description": "Login account name"},
+            {"name": "userPassword", "type": "string", "required": true, "description": "Account password"}
+          ],
+          "responseFields": [
+            {"name": "id", "type": "string", "description": "User ID"},
+            {"name": "userAccount", "type": "string", "description": "Login account name"},
+            {"name": "userAvatar", "type": "string", "description": "Avatar URL"},
+            {"name": "userRole", "type": "integer", "description": "Role: 0 admin, 1 user, 2 VIP, 3 banned"},
+            {"name": "userProfile", "type": "string", "description": "User bio/profile text"},
+            {"name": "phoneNumber", "type": "string", "description": "Phone number"},
+            {"name": "email", "type": "string", "description": "Email address"},
+            {"name": "grade", "type": "integer", "description": "Grade level 1-9 (school to PhD)"},
+            {"name": "workExperience", "type": "string", "description": "Work experience text"},
+            {"name": "expertiseDirection", "type": "string", "description": "Area of expertise"},
+            {"name": "createTime", "type": "datetime", "description": "Account creation time"},
+            {"name": "updateTime", "type": "datetime", "description": "Last update time"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Register",
+      "route": "/register",
+      "description": "New user creates an account.",
+      "components": ["RegisterForm"],
+      "apis": [
+        {
+          "method": "POST",
+          "path": "/auth/register",
+          "description": "Create a new user account",
+          "requestFields": [
+            {"name": "userAccount", "type": "string", "required": true, "description": "Desired login account name"},
+            {"name": "userPassword", "type": "string", "required": true, "description": "Password"},
+            {"name": "checkPassword", "type": "string", "required": true, "description": "Password confirmation, must match userPassword"}
+          ],
+          "responseFields": [
+            {"name": "data", "type": "long", "description": "Newly created user ID"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Home / Dashboard",
+      "route": "/",
+      "description": "Landing page after login: highlights featured question banks, today's sign-in status, and quick links.",
+      "components": ["FeaturedBankList", "SignInWidget", "QuickNav"],
+      "apis": [
+        {
+          "method": "POST",
+          "path": "/question-banks/search",
+          "description": "Fetch a page of question banks to feature",
+          "requestFields": [
+            {"name": "current", "type": "integer", "required": false, "description": "Page number"},
+            {"name": "pageSize", "type": "integer", "required": false, "description": "Page size"},
+            {"name": "searchText", "type": "string", "required": false, "description": "Free-text search keyword"}
+          ],
+          "responseFields": [
+            {"name": "records", "type": "QuestionBankVO[]", "description": "List of public bank info"},
+            {"name": "total", "type": "long", "description": "Total record count"},
+            {"name": "size", "type": "long", "description": "Page size"},
+            {"name": "current", "type": "long", "description": "Current page number"}
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/user/check/today_sign_in",
+          "description": "Check whether current user has signed in today",
+          "requestFields": [],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if already signed in today"}]
+        }
+      ]
+    },
+    {
+      "name": "Question Bank List",
+      "route": "/banks",
+      "description": "Browse and search all public question banks, paginated.",
+      "components": ["SearchBar", "BankCardGrid", "Pagination"],
+      "apis": [
+        {
+          "method": "POST",
+          "path": "/question-banks/search",
+          "description": "Paginated search of question banks",
+          "requestFields": [
+            {"name": "current", "type": "integer", "required": false, "description": "Page number"},
+            {"name": "pageSize", "type": "integer", "required": false, "description": "Page size"},
+            {"name": "sortField", "type": "string", "required": false, "description": "Field to sort by"},
+            {"name": "sortOrder", "type": "string", "required": false, "description": "ascend/descend/undefined"},
+            {"name": "title", "type": "string", "required": false, "description": "Filter by title"},
+            {"name": "description", "type": "string", "required": false, "description": "Filter by description"},
+            {"name": "searchText", "type": "string", "required": false, "description": "Free-text search keyword"}
+          ],
+          "responseFields": [
+            {"name": "records", "type": "QuestionBankVO[]", "description": "List of public bank info"},
+            {"name": "total", "type": "long", "description": "Total record count"},
+            {"name": "size", "type": "long", "description": "Page size"},
+            {"name": "current", "type": "long", "description": "Current page number"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Question Bank Detail",
+      "route": "/banks/:bankId",
+      "description": "Shows a question bank's info and the questions inside it, paginated.",
+      "components": ["BankHeader", "QuestionList", "Pagination"],
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/question-banks/{questionBankId}",
+          "description": "Get question bank detail, optionally with question list",
+          "requestFields": [
+            {"name": "questionBankId", "type": "string (path)", "required": true, "description": "Question bank ID"},
+            {"name": "needQueryQuestionList", "type": "boolean (query)", "required": false, "description": "Whether to also load question list"}
+          ],
+          "responseFields": [
+            {"name": "data", "type": "QuestionBankDetailVO", "description": "Bank detail: id, title, picture, userId, description, createTime, updateTime, userVO (creator info), questionPageVO (paginated questions)"}
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/question-bank-relations/banks/{questionBankId}/questions",
+          "description": "Paginated list of approved questions within the bank",
+          "requestFields": [
+            {"name": "questionBankId", "type": "string (path)", "required": true, "description": "Question bank ID"},
+            {"name": "current", "type": "integer (query)", "required": false, "description": "Page number, default 1"},
+            {"name": "pageSize", "type": "integer (query)", "required": false, "description": "Page size, default 10"}
+          ],
+          "responseFields": [
+            {"name": "records", "type": "QuestionForBankVO[]", "description": "Questions in the bank (id, title, tags, difficulty, viewNum, thumbNum, favourNum, needVip)"},
+            {"name": "total", "type": "long", "description": "Total record count"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Question Search",
+      "route": "/questions",
+      "description": "Browse and search all approved public questions across banks.",
+      "components": ["SearchBar", "FilterPanel (tags/difficulty)", "QuestionCardList", "Pagination"],
+      "apis": [
+        {
+          "method": "POST",
+          "path": "/questions/search",
+          "description": "Paginated search of publicly accessible questions",
+          "requestFields": [
+            {"name": "current", "type": "integer", "required": false, "description": "Page number"},
+            {"name": "pageSize", "type": "integer", "required": false, "description": "Page size"},
+            {"name": "questionBankId", "type": "long", "required": false, "description": "Filter by bank ID"},
+            {"name": "title", "type": "string", "required": false, "description": "Filter by title"},
+            {"name": "tags", "type": "string[]", "required": false, "description": "Filter by tags"},
+            {"name": "difficulty", "type": "integer", "required": false, "description": "Filter by difficulty 0-2"},
+            {"name": "searchText", "type": "string", "required": false, "description": "Free-text search keyword"}
+          ],
+          "responseFields": [
+            {"name": "records", "type": "QuestionVO[]", "description": "Public questions matching filters"},
+            {"name": "total", "type": "long", "description": "Total record count"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Question Detail / Practice",
+      "route": "/questions/:questionId",
+      "description": "Shows the full question, answer (revealable), tags, difficulty, and lets the user favourite/like it. If needVip is true and the user lacks membership, prompt to upgrade instead of showing the answer.",
+      "components": ["QuestionCard", "AnswerReveal", "FavouriteButton", "ThumbButton", "VipGate"],
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/questions/{id}",
+          "description": "Get an approved question's detail",
+          "requestFields": [{"name": "id", "type": "string (path)", "required": true, "description": "Question ID"}],
+          "responseFields": [{"name": "data", "type": "QuestionVO", "description": "id, title, content, answer, tags, difficulty, viewNum, thumbNum, favourNum, needVip"}]
+        },
+        {
+          "method": "POST",
+          "path": "/favourites/questions/{questionId}",
+          "description": "Favourite this question",
+          "requestFields": [{"name": "questionId", "type": "string (path)", "required": true, "description": "Question ID"}],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if favourited"}]
+        },
+        {
+          "method": "DELETE",
+          "path": "/favourites/questions/{questionId}",
+          "description": "Remove favourite",
+          "requestFields": [{"name": "questionId", "type": "string (path)", "required": true, "description": "Question ID"}],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if unfavourite succeeded"}]
+        },
+        {
+          "method": "GET",
+          "path": "/favourites/questions/{questionId}/status",
+          "description": "Check whether current user has favourited this question",
+          "requestFields": [{"name": "questionId", "type": "string (path)", "required": true, "description": "Question ID"}],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if favourited"}]
+        },
+        {
+          "method": "GET",
+          "path": "/favourites/questions/{questionId}/count",
+          "description": "Total favourite count",
+          "requestFields": [{"name": "questionId", "type": "string (path)", "required": true, "description": "Question ID"}],
+          "responseFields": [{"name": "data", "type": "integer", "description": "Favourite count"}]
+        },
+        {
+          "method": "POST",
+          "path": "/thumbs/questions/{questionId}",
+          "description": "Like this question",
+          "requestFields": [{"name": "questionId", "type": "string (path)", "required": true, "description": "Question ID"}],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if liked"}]
+        },
+        {
+          "method": "DELETE",
+          "path": "/thumbs/questions/{questionId}",
+          "description": "Remove like",
+          "requestFields": [{"name": "questionId", "type": "string (path)", "required": true, "description": "Question ID"}],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if unlike succeeded"}]
+        },
+        {
+          "method": "GET",
+          "path": "/thumbs/questions/{questionId}/status",
+          "description": "Check whether current user has liked this question",
+          "requestFields": [{"name": "questionId", "type": "string (path)", "required": true, "description": "Question ID"}],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if liked"}]
+        },
+        {
+          "method": "GET",
+          "path": "/thumbs/questions/{questionId}/count",
+          "description": "Total like count",
+          "requestFields": [{"name": "questionId", "type": "string (path)", "required": true, "description": "Question ID"}],
+          "responseFields": [{"name": "data", "type": "integer", "description": "Like count"}]
+        }
+      ]
+    },
+    {
+      "name": "My Favourites",
+      "route": "/me/favourites",
+      "description": "Paginated list of questions the current user has favourited.",
+      "components": ["QuestionCardList", "Pagination"],
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/favourites/my",
+          "description": "List current user's favourited, approved questions",
+          "requestFields": [
+            {"name": "current", "type": "integer (query)", "required": false, "description": "Page number, default 1"},
+            {"name": "pageSize", "type": "integer (query)", "required": false, "description": "Page size, default 10"}
+          ],
+          "responseFields": [
+            {"name": "data.records", "type": "QuestionForBankVO[]", "description": "Favourited question summaries"},
+            {"name": "data.total", "type": "long", "description": "Total matching records"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Submit / My Contributed Questions",
+      "route": "/me/contributions",
+      "description": "User submits a new question for admin review, and can view/edit/delete their own previously submitted questions.",
+      "components": ["QuestionSubmitForm", "MyContributionList"],
+      "apis": [
+        {
+          "method": "POST",
+          "path": "/questions",
+          "description": "Submit a new question for review",
+          "requestFields": [
+            {"name": "title", "type": "string", "required": true, "description": "Question title, max 200 chars"},
+            {"name": "content", "type": "string", "required": true, "description": "Question content, max 500 chars"},
+            {"name": "answer", "type": "string", "required": true, "description": "Question answer, max 20000 chars"},
+            {"name": "tags", "type": "string[]", "required": false, "description": "Up to 10 tags"},
+            {"name": "difficulty", "type": "integer", "required": false, "description": "Difficulty 0-2 (easy/medium/hard)"},
+            {"name": "questionBankId", "type": "long", "required": false, "description": "Bank to attach the question to"}
+          ],
+          "responseFields": [{"name": "data", "type": "long", "description": "New question ID"}]
+        },
+        {
+          "method": "PUT",
+          "path": "/questions",
+          "description": "Edit own question",
+          "requestFields": [
+            {"name": "id", "type": "long", "required": true, "description": "Question ID"},
+            {"name": "title", "type": "string", "required": false, "description": "New title"},
+            {"name": "content", "type": "string", "required": false, "description": "New content"},
+            {"name": "answer", "type": "string", "required": false, "description": "New answer"},
+            {"name": "difficulty", "type": "integer", "required": false, "description": "New difficulty 0-2"},
+            {"name": "tags", "type": "string[]", "required": false, "description": "New tags, up to 10"}
+          ],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if edit succeeded"}]
+        },
+        {
+          "method": "DELETE",
+          "path": "/questions",
+          "description": "Delete own question",
+          "requestFields": [{"name": "id", "type": "long", "required": true, "description": "Question ID to delete"}],
+          "responseFields": []
+        }
+      ]
+    },
+    {
+      "name": "Daily Sign-In",
+      "route": "/me/sign-in",
+      "description": "Calendar view of the user's sign-in history for a chosen month, current streak, and a button to sign in today.",
+      "components": ["SignInCalendar", "StreakBadge", "SignInButton"],
+      "apis": [
+        {
+          "method": "POST",
+          "path": "/user/add/sign_in",
+          "description": "Record today's sign-in",
+          "requestFields": [],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if first sign-in today"}]
+        },
+        {
+          "method": "GET",
+          "path": "/user/get/continuous_sign_in_days",
+          "description": "Current consecutive sign-in streak",
+          "requestFields": [],
+          "responseFields": [{"name": "data", "type": "integer", "description": "Consecutive days signed in"}]
+        },
+        {
+          "method": "GET",
+          "path": "/user/check/today_sign_in",
+          "description": "Whether user signed in today",
+          "requestFields": [],
+          "responseFields": [{"name": "data", "type": "boolean", "description": "True if signed in today"}]
+        },
+        {
+          "method": "GET",
+          "path": "/user/get/current_month_sign_in_days",
+          "description": "Sign-in day count for current month",
+          "requestFields": [],
+          "responseFields": [{"name": "data", "type": "integer", "description": "Days signed in this month"}]
+        },
+        {
+          "method": "GET",
+          "path": "/user/get/user_sign_in_records",
+          "description": "List of signed-in days for a given year/month",
+          "requestFields": [
+            {"name": "year", "type": "integer (query)", "required": false, "description": "Year, default current"},
+            {"name": "month", "type": "integer (query)", "required": false, "description": "Month, default current"}
+          ],
+          "responseFields": [{"name": "data", "type": "integer[]", "description": "Days of month signed in, e.g. [1,5,10,15]"}]
+        }
+      ]
+    },
+    {
+      "name": "My Profile",
+      "route": "/me/profile",
+      "description": "View and edit own profile, change avatar, change password.",
+      "components": ["ProfileForm", "AvatarUploader", "ChangePasswordForm"],
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/user/me",
+          "description": "Get current user's own profile",
+          "requestFields": [],
+          "responseFields": [
+            {"name": "id", "type": "string", "description": "User ID"},
+            {"name": "userAccount", "type": "string", "description": "Login account name"},
+            {"name": "userAvatar", "type": "string", "description": "Avatar URL"},
+            {"name": "userRole", "type": "integer", "description": "Role: 0 admin, 1 user, 2 VIP, 3 banned"},
+            {"name": "userProfile", "type": "string", "description": "Bio/profile text"},
+            {"name": "phoneNumber", "type": "string", "description": "Phone number"},
+            {"name": "email", "type": "string", "description": "Email address"},
+            {"name": "grade", "type": "integer", "description": "Grade level 1-9"},
+            {"name": "workExperience", "type": "string", "description": "Work experience text"},
+            {"name": "expertiseDirection", "type": "string", "description": "Area of expertise"},
+            {"name": "createTime", "type": "datetime", "description": "Account creation time"},
+            {"name": "updateTime", "type": "datetime", "description": "Last update time"}
+          ]
+        },
+        {
+          "method": "PUT",
+          "path": "/user/me",
+          "description": "Edit own profile",
+          "requestFields": [
+            {"name": "userName", "type": "string", "required": false, "description": "Display name"},
+            {"name": "userAvatar", "type": "string", "required": false, "description": "Avatar URL"},
+            {"name": "userProfile", "type": "string", "required": false, "description": "Bio/profile text"},
+            {"name": "phoneNumber", "type": "string", "required": false, "description": "Phone number, 11 digits"},
+            {"name": "email", "type": "string", "required": false, "description": "Email address"},
+            {"name": "grade", "type": "integer", "required": false, "description": "Grade level 1-9"},
+            {"name": "workExperience", "type": "string", "required": false, "description": "Work experience"},
+            {"name": "expertiseDirection", "type": "string", "required": false, "description": "Area of expertise"}
+          ],
+          "responseFields": []
+        },
+        {
+          "method": "PUT",
+          "path": "/user/me/password",
+          "description": "Change own password",
+          "requestFields": [
+            {"name": "password", "type": "string", "required": true, "description": "New password, 8-20 chars"},
+            {"name": "checkPassword", "type": "string", "required": true, "description": "Confirm new password"}
+          ],
+          "responseFields": []
+        },
+        {
+          "method": "GET",
+          "path": "/avatar/getAvatarCredentials",
+          "description": "Get upload credentials for a new avatar file",
+          "requestFields": [{"name": "filename", "type": "string (query)", "required": true, "description": "Name of the file to upload"}],
+          "responseFields": [{"name": "data", "type": "object (map)", "description": "Upload credentials/parameters for direct file upload"}]
+        },
+        {
+          "method": "GET",
+          "path": "/avatar/confirmAvatarUpload",
+          "description": "Confirm avatar upload completed and finalize it as the user's avatar",
+          "requestFields": [],
+          "responseFields": [{"name": "data", "type": "string", "description": "Final avatar URL"}]
+        }
+      ]
+    },
+    {
+      "name": "Public User Profile",
+      "route": "/users/:userId",
+      "description": "View another user's public profile (e.g. a question bank creator).",
+      "components": ["PublicProfileCard"],
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/user/{userId}",
+          "description": "Get a publicly viewable sanitized profile",
+          "requestFields": [{"name": "userId", "type": "string (path)", "required": true, "description": "Target user's ID"}],
+          "responseFields": [
+            {"name": "id", "type": "string", "description": "User ID"},
+            {"name": "userName", "type": "string", "description": "Display name"},
+            {"name": "userAvatar", "type": "string", "description": "Avatar URL"},
+            {"name": "userRole", "type": "integer", "description": "Role: 0 admin, 1 user, 2 VIP, 3 banned"},
+            {"name": "userProfile", "type": "string", "description": "Bio/profile text"},
+            {"name": "createTime", "type": "datetime", "description": "Account creation time"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Membership / Upgrade",
+      "route": "/membership",
+      "description": "User picks a membership level and duration, creates an order, and is redirected to Alipay to pay.",
+      "components": ["PlanSelector", "OrderSummary"],
+      "apis": [
+        {
+          "method": "POST",
+          "path": "/alipay/submit",
+          "description": "Create a pending membership order",
+          "requestFields": [
+            {"name": "levelId", "type": "integer", "required": true, "description": "Membership level ID"},
+            {"name": "durationType", "type": "string", "required": true, "description": "MONTH/QUARTER/YEAR/TRIAL"},
+            {"name": "durationValue", "type": "integer", "required": true, "description": "Duration value, e.g. 1, 3, 12"},
+            {"name": "currency", "type": "string", "required": false, "description": "Currency code, defaults to CNY"}
+          ],
+          "responseFields": [
+            {"name": "outTradeNo", "type": "string", "description": "Platform order number, used to start payment"},
+            {"name": "status", "type": "string", "description": "PENDING/PAID"},
+            {"name": "amount", "type": "number", "description": "Amount due"},
+            {"name": "currency", "type": "string", "description": "Currency code"},
+            {"name": "paymentMethod", "type": "string", "description": "Payment method"},
+            {"name": "createTime", "type": "datetime", "description": "Order creation time"}
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/alipay/pay/{outTradeNo}",
+          "description": "Navigate the browser here to load the Alipay hosted checkout page (returns raw HTML, not JSON - open as a full-page redirect, not fetch/XHR)",
+          "requestFields": [{"name": "outTradeNo", "type": "string (path)", "required": true, "description": "Order number from /alipay/submit"}],
+          "responseFields": [{"name": "(raw body)", "type": "text/html", "description": "Alipay checkout page markup"}]
+        }
+      ]
+    },
+    {
+      "name": "Payment Result",
+      "route": "/membership/return",
+      "description": "Landing page the user is redirected back to after completing payment on Alipay.",
+      "components": ["PaymentResultBanner"],
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/alipay/return",
+          "description": "Backend-rendered redirect target confirming payment result (raw HTML, not JSON - this is the URL Alipay sends the browser back to; the frontend route here is where that HTML currently lands, replace with a frontend page later if the backend route is changed to just redirect to the SPA)",
+          "requestFields": [],
+          "responseFields": [{"name": "(raw body)", "type": "text/html", "description": "Success/failure confirmation page"}]
+        }
+      ]
+    }
+  ],
+  "dataModels": [
+    {
+      "name": "UserVO / LoginUserVO (self or public profile)",
+      "fields": [
+        {"name": "id", "type": "string", "description": "User ID"},
+        {"name": "userAccount", "type": "string", "description": "Login account (self-view only)"},
+        {"name": "userName", "type": "string", "description": "Display name (public-view field)"},
+        {"name": "userAvatar", "type": "string", "description": "Avatar URL"},
+        {"name": "userRole", "type": "integer", "description": "0 admin, 1 user, 2 VIP, 3 banned"},
+        {"name": "userProfile", "type": "string", "description": "Bio/profile text"},
+        {"name": "phoneNumber", "type": "string", "description": "Phone number (self-view only)"},
+        {"name": "email", "type": "string", "description": "Email address (self-view only)"},
+        {"name": "grade", "type": "integer", "description": "Grade level 1-9 (self-view only)"},
+        {"name": "workExperience", "type": "string", "description": "Work experience (self-view only)"},
+        {"name": "expertiseDirection", "type": "string", "description": "Area of expertise (self-view only)"},
+        {"name": "createTime", "type": "datetime", "description": "Account creation time"}
+      ]
+    },
+    {
+      "name": "QuestionVO",
+      "fields": [
+        {"name": "id", "type": "string", "description": "Question ID"},
+        {"name": "title", "type": "string", "description": "Question title"},
+        {"name": "content", "type": "string", "description": "Question content"},
+        {"name": "answer", "type": "string", "description": "Question answer"},
+        {"name": "tags", "type": "string[]", "description": "Question tags"},
+        {"name": "difficulty", "type": "integer", "description": "1-easy, 2-medium, 3-hard"},
+        {"name": "viewNum", "type": "integer", "description": "View count"},
+        {"name": "thumbNum", "type": "integer", "description": "Like count"},
+        {"name": "favourNum", "type": "integer", "description": "Favourite count"},
+        {"name": "needVip", "type": "integer", "description": "0-open to all, 1-requires active VIP membership"}
+      ]
+    },
+    {
+      "name": "QuestionForBankVO",
+      "fields": [
+        {"name": "id", "type": "string", "description": "Question ID"},
+        {"name": "title", "type": "string", "description": "Question title"},
+        {"name": "tags", "type": "string[]", "description": "Question tags"},
+        {"name": "difficulty", "type": "integer", "description": "1-easy, 2-medium, 3-hard"},
+        {"name": "viewNum", "type": "integer", "description": "View count"},
+        {"name": "thumbNum", "type": "integer", "description": "Like count"},
+        {"name": "favourNum", "type": "integer", "description": "Favourite count"},
+        {"name": "needVip", "type": "integer", "description": "0-open to all, 1-requires active VIP membership"}
+      ]
+    },
+    {
+      "name": "QuestionBankVO / QuestionBankDetailVO",
+      "fields": [
+        {"name": "id", "type": "string", "description": "Question bank ID"},
+        {"name": "title", "type": "string", "description": "Bank title"},
+        {"name": "picture", "type": "string", "description": "Cover picture URL"},
+        {"name": "userId", "type": "string", "description": "Creator user ID"},
+        {"name": "description", "type": "string", "description": "Bank description"},
+        {"name": "createTime", "type": "datetime", "description": "Creation time"},
+        {"name": "updateTime", "type": "datetime", "description": "Last update time"},
+        {"name": "userVO", "type": "UserVO", "description": "Creator's public info (detail view only)"},
+        {"name": "questionPageVO", "type": "Page<QuestionForBankVO>", "description": "Paginated question list (detail view only, when requested)"}
+      ]
+    },
+    {
+      "name": "MembershipOrder / MembershipOrderCreateVO",
+      "fields": [
+        {"name": "outTradeNo", "type": "string", "description": "Platform order number"},
+        {"name": "status", "type": "string", "description": "PENDING/PAID/FAILED/REFUNDED"},
+        {"name": "amount", "type": "number", "description": "Amount due"},
+        {"name": "currency", "type": "string", "description": "Currency code (default CNY)"},
+        {"name": "paymentMethod", "type": "string", "description": "ALIPAY/WECHAT/STRIPE etc."},
+        {"name": "createTime", "type": "datetime", "description": "Order creation time"}
+      ]
+    }
+  ],
+  "globalNotes": [
+    "Exclude any endpoint whose path or controller name starts with 'Internal' or '/internal' - those are service-to-service only, never call them from the frontend.",
+    "All list endpoints return pagination shape { records: [...], total, size, current } (occasionally nested one level deeper under `data`) - build a reusable pagination component/hook.",
+    "Question.needVip and QuestionForBankVO.needVip gate premium content; when true and the current user is not an active VIP (userRole !== 2, or vipExpireTime in the past), show an upsell prompt linking to the Membership page instead of the raw content.",
+    "Daily sign-in has no dedicated data model - it's tracked server-side as a per-user bitmap; the frontend should just render whatever day-array /user/get/user_sign_in_records returns.",
+    "GET /user/{userId} and POST /user/search both exist as public/anonymous-accessible endpoints in the backend; only the single-profile lookup (GET /user/{userId}) is wired into a page here. A general user directory/search page was intentionally left out of this app's scope - add one later if needed.",
+    "Payment endpoints /alipay/pay/{outTradeNo} and /alipay/return return raw HTML, not the standard JSON envelope - treat them as full-page navigations/redirects, not API calls made via fetch/XHR.",
+    "No base URL is preset for the API client - leave it as a configurable environment variable so it can be pointed at any backend host."
+  ]
+}

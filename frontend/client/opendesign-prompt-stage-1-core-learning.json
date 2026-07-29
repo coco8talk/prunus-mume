@@ -1,0 +1,116 @@
+{
+  "project": {
+    "name": "Prunus Mume - Core Learning Experience",
+    "workingDirectory": "frontend/client",
+    "mode": "extend_existing_project",
+    "instruction": "Continue from the current project. Do not create a new project, redesign the product, or replace the existing home page."
+  },
+  "references": [
+    "app/page.tsx",
+    "app/globals.css",
+    "app/layout.tsx",
+    "opendesign-prompt-client.json"
+  ],
+  "currentState": [
+    "The project uses Next.js App Router, React, TypeScript, and the existing global CSS.",
+    "Only the home route is currently implemented.",
+    "Question bank search, daily sign-in, learning progress, and other home-page interactions currently use local mock data.",
+    "The existing home page defines the Meiwen brand and must be treated as the design system for all new pages."
+  ],
+  "designSystem": {
+    "productType": "Chinese end-user education and question-bank application, not an admin dashboard",
+    "principles": [
+      "Use generous whitespace, a near-white light-gray background, white cards, thin borders, and restrained shadows.",
+      "Use the existing plum or burgundy variables as the primary brand color.",
+      "Use deep burgundy for VIP surfaces and green only for completed or successful states.",
+      "Continue the current large headings, tight heading letter spacing, restrained body typography, 18-28px corner radii, pill tags, linear progress bars, circular progress indicators, and abstract question-bank covers.",
+      "Reuse the CSS variables and component appearance already defined in app/globals.css.",
+      "Do not introduce a second component library or an unrelated visual system.",
+      "Avoid excessive gradients, glassmorphism, colorful icon sets, oversized shadows, and dense dashboard layouts.",
+      "Preserve the existing home-page copy, primary layout, and visual appearance. Only make changes required for shared components and real navigation."
+    ]
+  },
+  "objective": "Complete the core journey from discovering a question bank to browsing questions and practicing a question, while making all relevant home-page entry points functional.",
+  "routes": [
+    {
+      "path": "/login",
+      "name": "Login",
+      "requirements": [
+        "Create a branded login page with account and password fields.",
+        "Include password visibility, remember-session control, login action, and a registration link.",
+        "Design normal, validation-error, and submitting states."
+      ]
+    },
+    {
+      "path": "/register",
+      "name": "Register",
+      "requirements": [
+        "Include account, password, password confirmation, terms acceptance, registration action, and a return-to-login link.",
+        "Design normal, validation-error, and submitting states."
+      ]
+    },
+    {
+      "path": "/banks",
+      "name": "Question Bank List",
+      "requirements": [
+        "Provide search, sorting, category or difficulty filters, result count, question-bank cards, pagination, and an empty state.",
+        "Use either a grid or list layout that naturally extends the home-page question-bank cards."
+      ]
+    },
+    {
+      "path": "/banks/[bankId]",
+      "name": "Question Bank Detail",
+      "requirements": [
+        "Show the cover, title, description, creator, question count, and learning progress.",
+        "Show a paginated question list with difficulty, tags, view count, like count, favourite count, and VIP status."
+      ]
+    },
+    {
+      "path": "/questions",
+      "name": "Question Search",
+      "requirements": [
+        "Support keyword, tag, difficulty, and question-bank filtering.",
+        "Provide a desktop filter area and a mobile-friendly filter drawer or sheet.",
+        "Include result count, pagination, loading, empty, and error states."
+      ]
+    },
+    {
+      "path": "/questions/[questionId]",
+      "name": "Question Detail and Practice",
+      "requirements": [
+        "Clearly present the question content, tags, difficulty, and source question bank.",
+        "Keep the answer collapsed until the user selects Show Answer.",
+        "Allow like and favourite toggling with immediate mock count updates.",
+        "Show answers for public questions.",
+        "For a VIP question viewed by a non-member, hide the answer and show a restrained upgrade card linking to /membership.",
+        "Provide previous-question, next-question, and return-to-bank actions."
+      ]
+    }
+  ],
+  "globalNavigation": [
+    "Extract the current home-page navigation into a reusable site Header without changing its desktop appearance.",
+    "Desktop navigation must include Home, Question Banks, and All Questions.",
+    "My Favourites and the avatar must navigate to their corresponding pages.",
+    "The current layout hides primary navigation below 780px. Add a usable mobile navigation pattern, such as a restrained bottom navigation or menu drawer.",
+    "Show a clear active state for the current route."
+  ],
+  "implementationConstraints": [
+    "Focus on a complete, navigable, high-fidelity frontend in this stage. Do not connect to the real backend yet.",
+    "Use structured mock data and TypeScript types instead of embedding large data objects directly in JSX.",
+    "Search, filtering, pagination, answer reveal, likes, favourites, and VIP gating must be genuinely interactive.",
+    "Use real application routes. Do not keep placeholder href=\"#\" navigation.",
+    "Provide loading, empty, and error states that match the existing visual language.",
+    "Support desktop, tablet, and approximately 390px mobile widths without horizontal scrolling.",
+    "Maintain keyboard accessibility, visible focus states, semantic heading order, and appropriate ARIA labels.",
+    "Preserve existing data-od-id attributes and add stable data-od-id attributes to important new elements.",
+    "Update or replace stale starter tests when necessary. Do not restore the old starter loading skeleton merely to satisfy outdated tests."
+  ],
+  "acceptanceCriteria": [
+    "The existing home page remains visually consistent while its core entry points become functional.",
+    "All six routes can be opened directly and survive a browser refresh.",
+    "A user can navigate from the home page to a bank list, bank detail, and question detail, then reveal an answer and toggle like or favourite state.",
+    "A non-member cannot see the answer of a VIP question and receives an upgrade path instead.",
+    "Desktop and mobile both provide complete navigation.",
+    "The project passes TypeScript, lint, and build checks."
+  ]
+}

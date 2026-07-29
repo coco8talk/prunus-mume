@@ -31,6 +31,11 @@ const routes = [
   ["/questions", "把模糊的理解"],
   ["/questions/q101", "JavaScript 闭包解决了什么问题"],
   ["/questions/q106", "会员专享解析"],
+  ["/me/favourites", "把重要的问题"],
+  ["/me/contributions", "把你的好问题"],
+  ["/me/sign-in", "让持续发生"],
+  ["/me/profile", "让大家认识"],
+  ["/users/lin-wan", "认证贡献者"],
 ];
 
 for (const [pathname, expectedCopy] of routes) {
@@ -50,10 +55,41 @@ test("renders real navigation and no placeholder links", async () => {
 
   assert.match(html, /href="\/banks"/);
   assert.match(html, /href="\/questions"/);
-  assert.match(html, /href="\/favorites"/);
+  assert.match(html, /href="\/me\/favourites"/);
+  assert.match(html, /href="\/me\/contributions"/);
+  assert.match(html, /href="\/me\/sign-in"/);
+  assert.match(html, /href="\/me\/profile"/);
   assert.match(html, /href="\/questions\/q101"/);
   assert.doesNotMatch(html, /href="#"/);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site/);
+});
+
+test("public profile omits private account fields", async () => {
+  const response = await render("/users/lin-wan");
+  const html = await response.text();
+
+  assert.match(html, /林晚/);
+  assert.match(html, /加入于/);
+  assert.match(html, /公开题库/);
+  assert.doesNotMatch(html, /linwan@example\.com/);
+  assert.doesNotMatch(html, /138 \*\*\*\* 6721/);
+  assert.doesNotMatch(html, /手机号码|邮箱|账号名/);
+});
+
+test("personal routes expose the required local workflows", async () => {
+  const favourites = await (await render("/me/favourites")).text();
+  const contributions = await (await render("/me/contributions")).text();
+  const signIn = await (await render("/me/sign-in")).text();
+  const profile = await (await render("/me/profile")).text();
+
+  assert.match(favourites, /移除收藏/);
+  assert.match(favourites, /搜索题目或标签/);
+  assert.match(contributions, /提交新题/);
+  assert.match(contributions, /参考答案/);
+  assert.match(signIn, /签到日历/);
+  assert.match(signIn, /立即签到/);
+  assert.match(profile, /编辑资料/);
+  assert.match(profile, /修改密码/);
 });
 
 test("keeps public answers collapsed and VIP answers out of the document", async () => {

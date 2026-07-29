@@ -38,19 +38,23 @@ export function Header() {
         </nav>
         <div className="topbar-actions">
           <Link
-            className={`text-button ${isActive(pathname, "/favorites") ? "active" : ""}`}
-            href="/favorites"
+            className={`text-button ${isActive(pathname, "/me/favourites") ? "active" : ""}`}
+            href="/me/favourites"
           >
             我的收藏
           </Link>
-          <Link
-            className="avatar-button"
-            href="/profile"
-            aria-label="打开个人中心"
-            data-od-id="profile-avatar-link"
-          >
-            <span>林</span>
-          </Link>
+          <details className="avatar-menu" data-od-id="profile-avatar-menu">
+            <summary className="avatar-button" aria-label="打开个人中心菜单">
+              <span>林</span>
+            </summary>
+            <div>
+              <p><b>林晚</b><small>linwan</small></p>
+              <Link href="/me/favourites">我的收藏</Link>
+              <Link href="/me/contributions">题目贡献</Link>
+              <Link href="/me/sign-in">每日签到</Link>
+              <Link href="/me/profile">个人资料</Link>
+            </div>
+          </details>
         </div>
       </header>
       <nav className="mobile-bottom-nav" aria-label="移动端主要导航">
@@ -66,12 +70,12 @@ export function Header() {
           </Link>
         ))}
         <Link
-          className={isActive(pathname, "/favorites") ? "active" : ""}
-          href="/favorites"
-          aria-current={isActive(pathname, "/favorites") ? "page" : undefined}
+          className={isActive(pathname, "/me") ? "active" : ""}
+          href="/me/profile"
+          aria-current={isActive(pathname, "/me") ? "page" : undefined}
         >
-          <span aria-hidden="true">☆</span>
-          收藏
+          <span aria-hidden="true">我</span>
+          我的
         </Link>
       </nav>
     </>

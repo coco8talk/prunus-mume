@@ -105,4 +105,58 @@ class UserControllerTest {
 
         verifyNoInteractions(userService);
     }
+
+    @Test
+    void adminCreateUserPostsToUsersRoot() throws Exception {
+        when(userService.adminCreateUser(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(Result.success(HttpStatusEnum.OK, 7L));
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userAccount\":\"mume_test\",\"userName\":\"梅子\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value("7"));
+    }
+
+    @Test
+    void adminDeleteUserTakesIdFromPathVariable() throws Exception {
+        when(userService.adminDeleteUser(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(Result.success(HttpStatusEnum.NO_CONTENT));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/users/{userId}", "7"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<com.coco8talk.pm.user.model.dto.DeleteUserDTO> captor =
+                ArgumentCaptor.forClass(com.coco8talk.pm.user.model.dto.DeleteUserDTO.class);
+        verify(userService).adminDeleteUser(captor.capture());
+        assertThat(captor.getValue().getId()).isEqualTo(7L);
+    }
+
+    @Test
+    void adminEditUserTakesIdFromPathVariableAndRejectsEmptyBody() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/users/{userId}", "7")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(400));
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void adminEditUserSetsIdFromPathEvenWhenBodyOmitsIt() throws Exception {
+        when(userService.adminEditUser(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(Result.success(HttpStatusEnum.NO_CONTENT));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/users/{userId}", "7")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userName\":\"新名字\"}"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<com.coco8talk.pm.user.model.dto.AdminEditUserDTO> captor =
+                ArgumentCaptor.forClass(com.coco8talk.pm.user.model.dto.AdminEditUserDTO.class);
+        verify(userService).adminEditUser(captor.capture());
+        assertThat(captor.getValue().getId()).isEqualTo(7L);
+        assertThat(captor.getValue().getUserName()).isEqualTo("新名字");
+    }
 }

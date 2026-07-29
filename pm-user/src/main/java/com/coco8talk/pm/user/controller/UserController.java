@@ -43,40 +43,34 @@ public class UserController {
      * @param createUserDTO 创建的用户信息
      * @return 携带用户 id 的响应结果
      */
-    @PostMapping("/admin")
+    @PostMapping
     @Operation(summary = "添加用户（管理员）", description = "由管理员创建用户账号，未指定密码时使用系统默认密码")
     @SaCheckRole(UserConstant.ADMIN_USER_ROLE)
     public Result<Long> adminCreateUser(@RequestBody @Valid CreateUserDTO createUserDTO) {
         log.info("管理员创建用户请求: {}", createUserDTO);
         return userService.adminCreateUser(createUserDTO);
     }
-    
-    /**
-     * 管理员根据用户id删除用户（管理员）
-     *
-     * @param deleteUserDTO 包含用户Id的请求参数封装类
-     * @return 删除结果 成功-true
-     */
-    @DeleteMapping("/admin")
+
+    @DeleteMapping("/{userId}")
     @Operation(summary = "删除用户（管理员）", description = "由管理员删除指定用户并同步清理该用户的会话及关联数据")
     @SaCheckRole(UserConstant.ADMIN_USER_ROLE)
-    public Result<Void> adminDeleteUser(@RequestBody @Valid DeleteUserDTO deleteUserDTO) {
-        log.info("管理员删除用户请求: {}", deleteUserDTO);
+    public Result<Void> adminDeleteUser(@PathVariable("userId") String userIdStr) {
+        Long userId = IdUtils.parseId(userIdStr, "用户ID");
+        log.info("管理员删除用户请求: userId={}", userId);
+        DeleteUserDTO deleteUserDTO = new DeleteUserDTO();
+        deleteUserDTO.setId(userId);
         return userService.adminDeleteUser(deleteUserDTO);
     }
-    
-    /**
-     * 管理员更新用户信息（管理员）
-     *
-     * @param adminEditUserDTO 更新的内容参数封装类
-     * @return 更新结果
-     */
-    @PutMapping("/admin")
+
+    @PutMapping("/{userId}")
     @Operation(summary = "更新用户（管理员）", description = "由管理员修改指定用户的名称、角色、简介或头像等资料")
     @SaCheckRole(UserConstant.ADMIN_USER_ROLE)
-    public Result<Void> adminEditUser(@RequestBody @Valid AdminEditUserDTO adminEditUserDTO) {
+    public Result<Void> adminEditUser(@PathVariable("userId") String userIdStr,
+                                       @RequestBody @Valid AdminEditUserDTO adminEditUserDTO) {
         log.info("管理员编辑用户请求: {}", adminEditUserDTO);
         ObjectMyUtil.throwIfAllFieldsAreEmptyOrBlank(adminEditUserDTO, HttpStatusEnum.BAD_REQUEST, "请输入修改信息");
+        Long userId = IdUtils.parseId(userIdStr, "用户ID");
+        adminEditUserDTO.setId(userId);
         return userService.adminEditUser(adminEditUserDTO);
     }
     

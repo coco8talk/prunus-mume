@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 @Tag(name = "用户相关接口", description = "提供个人资料维护以及管理员用户管理能力（注册/登录/登出已迁移至 pm-auth）")
 public class UserController {
     
@@ -110,43 +110,6 @@ public class UserController {
     }
     
     /**
-     * 根据用户id查询用户详细信息（仅管理员）
-     *
-     * @param userIdStr 查询用户的Id（字符串形式，避免大数精度丢失）
-     * @return 用户详细信息
-     */
-    @GetMapping("/admin/{userId}")
-    @Operation(summary = "获取用户（管理员）", description = "由管理员按用户 ID 查询包含管理字段的完整用户信息")
-    @SaCheckRole(UserConstant.ADMIN_USER_ROLE)
-    public Result<UserForAdminVO> adminQueryUserById(@PathVariable("userId") String userIdStr) {
-        Long userId = IdUtils.parseId(userIdStr, "用户ID");
-        log.info("管理员查询用户信息请求: userId={}", userId);
-        return userService.adminQueryUserById(userId);
-    }
-    
-    /**
-     * 根据条件分页查询用户（仅管理员）
-     *
-     * @param queryUserDTO 查询条件
-     * @return 查询结果
-     */
-    @PostMapping("/admin/search")
-    @Operation(summary = "分页查询（管理员）", description = "由管理员按账号、名称、角色等条件分页查询用户")
-    @SaCheckRole(UserConstant.ADMIN_USER_ROLE)
-    public Result<Page<UserForAdminVO>> adminQueryUserPage(@RequestBody @Valid QueryUserDTO queryUserDTO) {
-        log.info("管理员分页查询用户请求: {}", queryUserDTO);
-        ObjectMyUtil.throwIfAllFieldsAreEmptyOrBlank(queryUserDTO, HttpStatusEnum.BAD_REQUEST, "请正确输入查询条件");
-        return userService.adminQueryUserPage(queryUserDTO);
-    }
-    
-    /**
-     * 根据用户id查询用户脱敏信息
-     *
-     * @param userIdStr 查询用户的Id（字符串形式，避免大数精度丢失）
-     * @return 用户脱敏信息
-     */
-
-    /**
      * 获取当前登录用户的脱敏信息
      *
      * @return 当前登录用户 LoginUserVO
@@ -159,24 +122,24 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    @Operation(summary = "获取用户", description = "按用户 ID 查询可公开展示的脱敏用户资料")
-    public Result<UserVO> queryUserById(@PathVariable("userId") String userIdStr) {
+    @Operation(summary = "获取用户", description = "按用户 ID 查询用户资料；管理员可见完整字段，其他调用者仅可见脱敏字段")
+    public Result<Object> queryUserById(@PathVariable("userId") String userIdStr) {
         Long userId = IdUtils.parseId(userIdStr, "用户ID");
         log.info("查询用户信息请求: userId={}", userId);
-        return userService.queryUserById(userId);
+        return userService.queryUserByIdForCaller(userId);
     }
-    
+
     /**
-     * 根据条件分页查询用户脱敏信息
+     * 根据条件分页查询用户，管理员返回完整字段，其他调用者返回脱敏字段
      *
      * @param queryUserDTO 查询条件
      * @return 查询结果
      */
     @PostMapping("/search")
-    @Operation(summary = "分页查询", description = "按公开查询条件分页获取脱敏用户列表")
-    public Result<Page<UserVO>> queryUserPage(@RequestBody QueryUserDTO queryUserDTO) {
+    @Operation(summary = "分页查询", description = "按条件分页查询用户；管理员返回完整字段，其他调用者返回脱敏字段")
+    public Result<Object> queryUserPage(@RequestBody QueryUserDTO queryUserDTO) {
         log.info("分页查询用户请求: {}", queryUserDTO);
         ObjectMyUtil.throwIfAllFieldsAreEmptyOrBlank(queryUserDTO, HttpStatusEnum.BAD_REQUEST, "请输入合法的查询条件");
-        return userService.queryUserPage(queryUserDTO);
+        return userService.queryUserPageForCaller(queryUserDTO);
     }
 }

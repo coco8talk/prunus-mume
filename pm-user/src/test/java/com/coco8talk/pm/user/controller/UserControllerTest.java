@@ -16,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -158,5 +157,19 @@ class UserControllerTest {
         verify(userService).adminEditUser(captor.capture());
         assertThat(captor.getValue().getId()).isEqualTo(7L);
         assertThat(captor.getValue().getUserName()).isEqualTo("新名字");
+    }
+
+    @Test
+    void putMeRoutesToSelfEditNotAdminEdit() throws Exception {
+        when(userService.userEditSelf(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(Result.success(HttpStatusEnum.NO_CONTENT));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userName\":\"梅子\"}"))
+                .andExpect(status().isOk());
+
+        verify(userService).userEditSelf(org.mockito.ArgumentMatchers.any());
+        verify(userService, org.mockito.Mockito.never()).adminEditUser(org.mockito.ArgumentMatchers.any());
     }
 }

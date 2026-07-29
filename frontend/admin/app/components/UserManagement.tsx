@@ -189,7 +189,7 @@ export function UserManagement() {
     setError("");
     try {
       const response = await apiRequest<UserPage>(
-        "/user/admin/search",
+        "/users/search",
         { method: "POST", body: JSON.stringify(requestBody) },
         token,
       );
@@ -256,7 +256,7 @@ export function UserManagement() {
     setError("");
     try {
       const response = await apiRequest<UserRecord>(
-        `/user/admin/${encodeURIComponent(userRecord.id)}`,
+        `/users/${encodeURIComponent(userRecord.id)}`,
         {},
         token,
       );
@@ -321,7 +321,7 @@ export function UserManagement() {
     try {
       if (modalMode === "create") {
         await apiRequest<string>(
-          "/user/admin",
+          "/users",
           {
             method: "POST",
             body: JSON.stringify(
@@ -338,12 +338,11 @@ export function UserManagement() {
         setNotice(`Created ${form.userName.trim()}.`);
       } else if (modalMode === "edit" && selectedUser) {
         await apiRequest<void>(
-          "/user/admin",
+          `/users/${encodeURIComponent(selectedUser.id)}`,
           {
             method: "PUT",
             body: JSON.stringify(
               compactPayload({
-                id: selectedUser.id,
                 userName: form.userName.trim(),
                 userRole: form.userRole,
                 userAvatar: form.userAvatar.trim(),
@@ -371,11 +370,8 @@ export function UserManagement() {
     setError("");
     try {
       await apiRequest<void>(
-        "/user/admin",
-        {
-          method: "DELETE",
-          body: JSON.stringify({ id: deleteTarget.id }),
-        },
+        `/users/${encodeURIComponent(deleteTarget.id)}`,
+        { method: "DELETE" },
         token,
       );
       setNotice(`Deleted ${deleteTarget.userName}.`);

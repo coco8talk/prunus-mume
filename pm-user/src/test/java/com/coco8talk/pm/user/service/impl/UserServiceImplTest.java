@@ -99,7 +99,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void queryUserPageForCallerReturnsPublicPageForNonAdminCaller() {
+    void queryUserPageForCallerReturnsPublicPageForAnonymousCaller() {
         QueryUserDTO queryUserDTO = new QueryUserDTO();
         queryUserDTO.setUserName("梅");
         Page<UserVO> publicPage = new Page<>(1, 10);
@@ -110,5 +110,35 @@ class UserServiceImplTest {
         Result<Object> result = userServiceSpy.queryUserPageForCaller(queryUserDTO);
 
         assertThat(result.getData()).isSameAs(publicPage);
+        org.mockito.Mockito.verify(currentUserProvider, org.mockito.Mockito.never()).isAdmin();
+    }
+
+    @Test
+    void queryUserPageForCallerReturnsPublicPageForLoggedInNonAdminCaller() {
+        QueryUserDTO queryUserDTO = new QueryUserDTO();
+        queryUserDTO.setUserName("梅");
+        Page<UserVO> publicPage = new Page<>(1, 10);
+        when(currentUserProvider.isLoggedIn()).thenReturn(true);
+        when(currentUserProvider.isAdmin()).thenReturn(false);
+        org.mockito.Mockito.doReturn(Result.success(com.coco8talk.pm.common.result.http.HttpStatusEnum.OK, publicPage))
+                .when(userServiceSpy).queryUserPage(queryUserDTO);
+
+        Result<Object> result = userServiceSpy.queryUserPageForCaller(queryUserDTO);
+
+        assertThat(result.getData()).isSameAs(publicPage);
+    }
+
+    @Test
+    void queryUserPageReturnsFailResultWhenAdminQueryFindsNothing() {
+        QueryUserDTO queryUserDTO = new QueryUserDTO();
+        queryUserDTO.setUserName("梅");
+        org.mockito.Mockito.doReturn(
+                        Result.fail(com.coco8talk.pm.common.result.http.HttpStatusEnum.BAD_REQUEST, "根据当前条件未查询出用户"))
+                .when(userServiceSpy).adminQueryUserPage(queryUserDTO);
+
+        Result<Page<UserVO>> result = userServiceSpy.queryUserPage(queryUserDTO);
+
+        assertThat(result.getCode()).isEqualTo(400);
+        assertThat(result.getData()).isNull();
     }
 }

@@ -81,8 +81,33 @@ test("server-renders question management metadata and loading state", async () =
   assert.match(html, /Preparing your operations workspace/);
 });
 
+test("server-renders review routes and metadata", async () => {
+  const [queueResponse, historyResponse] = await Promise.all([
+    render("/reviews/pending"),
+    render("/reviews/history"),
+  ]);
+  assert.equal(queueResponse.status, 200);
+  assert.equal(historyResponse.status, 200);
+
+  const [queueHtml, historyHtml] = await Promise.all([
+    queueResponse.text(),
+    historyResponse.text(),
+  ]);
+  assert.match(
+    queueHtml,
+    /<title>Review queue · Prunus Mume Admin<\/title>/i,
+  );
+  assert.match(
+    historyHtml,
+    /<title>Review history · Prunus Mume Admin<\/title>/i,
+  );
+  assert.match(queueHtml, /Preparing your operations workspace/);
+  assert.match(historyHtml, /Preparing your operations workspace/);
+});
+
 test("keeps API and role contracts explicit", async () => {
-  const [api, auth, users, banks, contents, questions] = await Promise.all([
+  const [api, auth, users, banks, contents, questions, queue, history] =
+    await Promise.all([
     readFile(new URL("../app/lib/api.ts", import.meta.url), "utf8"),
     readFile(
       new URL("../app/components/AuthProvider.tsx", import.meta.url),
@@ -104,6 +129,14 @@ test("keeps API and role contracts explicit", async () => {
       new URL("../app/components/QuestionManagement.tsx", import.meta.url),
       "utf8",
     ),
+    readFile(
+      new URL("../app/components/ReviewQueue.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../app/components/ReviewHistory.tsx", import.meta.url),
+      "utf8",
+    ),
   ]);
 
   assert.match(api, /NEXT_PUBLIC_API_BASE_URL/);
@@ -113,8 +146,8 @@ test("keeps API and role contracts explicit", async () => {
   assert.match(auth, /response\.data\.userRole !== 0/);
   assert.match(auth, /"\/auth\/login"/);
   assert.match(auth, /"\/auth\/logout"/);
-  assert.match(users, /"\/user\/admin\/search"/);
-  assert.match(users, /"\/user\/admin"/);
+  assert.match(users, /"\/users\/search"/);
+  assert.match(users, /"\/users"/);
   assert.match(users, /method: "DELETE"/);
   assert.match(users, /method: "PUT"/);
   assert.match(banks, /"\/question-banks\/admin\/search"/);
@@ -126,7 +159,13 @@ test("keeps API and role contracts explicit", async () => {
   assert.match(questions, /"\/questions\/admin\/batch"/);
   assert.match(questions, /method: "DELETE"/);
   assert.match(questions, /method: "PUT"/);
-  for (const source of [users, banks, contents, questions]) {
+  assert.match(queue, /"\/question-reviews\/pending\/count"/);
+  assert.match(queue, /`\/question-reviews\/pending\?current=\$\{page\}&pageSize=\$\{pageSize\}`/);
+  assert.match(queue, /"\/question-reviews"/);
+  assert.match(queue, /reviewMessage/);
+  assert.match(history, /"\/question-reviews\/search"/);
+  assert.match(history, /`\/question-reviews\/questions\/\$\{encodeURIComponent\(questionId\)\}`/);
+  for (const source of [users, banks, contents, questions, queue, history]) {
     assert.doesNotMatch(source, /["`]\/(?:internal|orders|payments)/i);
   }
 });

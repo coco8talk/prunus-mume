@@ -310,6 +310,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 调用管理员查询方法
         Result<Page<UserForAdminVO>> pageResult = this.adminQueryUserPage(queryUserDTO);
         Page<UserForAdminVO> adminQueryPage = pageResult.getData();
+        if (adminQueryPage == null) {
+            return Result.fail(HttpStatusEnum.BAD_REQUEST, pageResult.getMessage());
+        }
         // 将管理员查询结果转换为普通用户VO
         Page<UserVO> userVoPage = UserMapstruct.INSTANCE.entityPageToVoPage(adminQueryPage);
         return Result.success(HttpStatusEnum.OK, userVoPage);

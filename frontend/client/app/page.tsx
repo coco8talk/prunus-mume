@@ -1,39 +1,10 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
-
-const banks = [
-  {
-    id: "frontend",
-    eyebrow: "前端工程",
-    title: "现代前端核心题库",
-    description: "从 JavaScript 运行机制到 React 状态设计，建立稳固的工程基础。",
-    progress: 68,
-    questions: 186,
-    level: "中级",
-    tone: "blue",
-  },
-  {
-    id: "algorithm",
-    eyebrow: "算法与结构",
-    title: "高频算法训练营",
-    description: "按模式拆解数组、链表、树与动态规划，适合系统刷题。",
-    progress: 34,
-    questions: 240,
-    level: "进阶",
-    tone: "coral",
-  },
-  {
-    id: "system-design",
-    eyebrow: "系统设计",
-    title: "可扩展系统设计",
-    description: "围绕真实场景理解缓存、消息队列、分布式一致性与容量规划。",
-    progress: 12,
-    questions: 96,
-    level: "高级",
-    tone: "green",
-  },
-];
+import { BankVisual } from "./components/BankVisual";
+import { featuredBanks } from "./data/mock";
 
 const activity = [
   { day: "一", done: true },
@@ -46,14 +17,15 @@ const activity = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [signedIn, setSignedIn] = useState(false);
   const [activeBank, setActiveBank] = useState("frontend");
 
   const filteredBanks = useMemo(() => {
     const term = query.trim().toLowerCase();
-    if (!term) return banks;
-    return banks.filter((bank) =>
+    if (!term) return featuredBanks;
+    return featuredBanks.filter((bank) =>
       [bank.title, bank.eyebrow, bank.description].some((item) =>
         item.toLowerCase().includes(term),
       ),
@@ -62,29 +34,11 @@ export default function Home() {
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    document.getElementById("featured-banks")?.focus();
+    router.push(query.trim() ? `/banks?query=${encodeURIComponent(query.trim())}` : "/banks");
   }
 
   return (
     <main className="app-shell" data-od-id="learning-dashboard">
-      <header className="topbar" data-od-id="top-navigation">
-        <a className="brand" href="#" aria-label="梅问首页">
-          <span className="brand-mark" aria-hidden="true">梅</span>
-          <span>梅问</span>
-        </a>
-        <nav className="primary-nav" aria-label="主要导航">
-          <a className="nav-link active" href="#">首页</a>
-          <a className="nav-link" href="#featured-banks">题库</a>
-          <a className="nav-link" href="#learning-plan">学习计划</a>
-        </nav>
-        <div className="topbar-actions">
-          <button className="text-button" type="button">我的收藏</button>
-          <button className="avatar-button" type="button" aria-label="打开个人中心">
-            <span>林</span>
-          </button>
-        </div>
-      </header>
-
       <section className="hero" data-od-id="dashboard-hero">
         <div className="hero-copy">
           <p className="section-kicker">今天，继续向前一步</p>
@@ -131,10 +85,10 @@ export default function Home() {
               <b>JavaScript 闭包与作用域</b>
             </div>
           </div>
-          <button className="primary-button" type="button" data-od-id="resume-learning-button">
+          <Link className="primary-button" href="/questions/q101" data-od-id="resume-learning-button">
             继续练习
             <span aria-hidden="true">→</span>
-          </button>
+          </Link>
         </aside>
       </section>
 
@@ -147,7 +101,7 @@ export default function Home() {
                 推荐题库
               </h2>
             </div>
-            <a href="#all-banks">查看全部 <span aria-hidden="true">→</span></a>
+            <Link href="/banks">查看全部 <span aria-hidden="true">→</span></Link>
           </div>
 
           <div className="bank-list" id="all-banks">
@@ -157,15 +111,14 @@ export default function Home() {
                 key={bank.id}
                 data-od-id={`bank-card-${bank.id}`}
               >
-                <button
+                <Link
                   className={`bank-visual ${bank.tone}`}
-                  type="button"
+                  href={`/banks/${bank.id}`}
                   aria-label={`打开${bank.title}`}
                   onClick={() => setActiveBank(bank.id)}
                 >
-                  <span>{bank.eyebrow.slice(0, 2)}</span>
-                  <i aria-hidden="true" />
-                </button>
+                  <BankVisual label={bank.eyebrow} />
+                </Link>
                 <div className="bank-info">
                   <div className="bank-meta">
                     <span>{bank.eyebrow}</span>
@@ -246,14 +199,14 @@ export default function Home() {
             </div>
           </section>
 
-          <a className="vip-card" href="#membership" data-od-id="membership-upgrade-card">
+          <Link className="vip-card" href="/membership" data-od-id="membership-upgrade-card">
             <span className="vip-label">PRO</span>
             <div>
               <strong>解锁完整题解</strong>
               <span>会员专享解析与进阶题库</span>
             </div>
             <span aria-hidden="true">→</span>
-          </a>
+          </Link>
         </aside>
       </section>
     </main>

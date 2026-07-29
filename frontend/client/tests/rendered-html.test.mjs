@@ -1,19 +1,13 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
-const developmentPreviewMeta =
-  /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
-const templateRoot = new URL("../", import.meta.url);
-const previewRoot = new URL("../app/_sites-preview/", import.meta.url);
-
-async function render() {
+async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${pathname}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", {
+    new Request(`http://localhost${pathname}`, {
       headers: { accept: "text/html" },
     }),
     {
@@ -28,64 +22,49 @@ async function render() {
   );
 }
 
-test("server-renders the starter loading skeleton", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+const routes = [
+  ["/", "把复杂知识"],
+  ["/login", "登录梅问"],
+  ["/register", "注册梅问"],
+  ["/banks", "找到下一组值得练习的题"],
+  ["/banks/frontend", "现代前端核心题库"],
+  ["/questions", "把模糊的理解"],
+  ["/questions/q101", "JavaScript 闭包解决了什么问题"],
+  ["/questions/q106", "会员专享解析"],
+];
 
+for (const [pathname, expectedCopy] of routes) {
+  test(`server-renders ${pathname}`, async () => {
+    const response = await render(pathname);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+    const html = await response.text();
+    assert.match(html, new RegExp(expectedCopy));
+    assert.match(html, /梅问/);
+  });
+}
+
+test("renders real navigation and no placeholder links", async () => {
+  const response = await render("/");
   const html = await response.text();
-  assert.match(html, developmentPreviewMeta);
-  assert.match(html, /<title>Your site is taking shape<\/title>/i);
-  assert.match(html, /Building your site/);
-  assert.match(html, /Your site is taking shape/);
-  assert.match(
-    html,
-    /Your first version will appear here automatically when it’s ready\./,
-  );
-  assert.doesNotMatch(html, /Codex/);
-  assert.match(html, /react-loading-skeleton/);
-  assert.match(html, /role="status"/);
+
+  assert.match(html, /href="\/banks"/);
+  assert.match(html, /href="\/questions"/);
+  assert.match(html, /href="\/favorites"/);
+  assert.match(html, /href="\/questions\/q101"/);
+  assert.doesNotMatch(html, /href="#"/);
+  assert.doesNotMatch(html, /Your site is taking shape|Building your site/);
 });
 
-test("keeps the loading skeleton scoped and disposable", async () => {
-  const [preview, css, page, layout, packageJson, files] = await Promise.all([
-    readFile(new URL("SkeletonPreview.tsx", previewRoot), "utf8"),
-    readFile(new URL("preview.css", previewRoot), "utf8"),
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot),
-  ]);
+test("keeps public answers collapsed and VIP answers out of the document", async () => {
+  const publicResponse = await render("/questions/q101");
+  const publicHtml = await publicResponse.text();
+  assert.match(publicHtml, /显示答案/);
+  assert.doesNotMatch(publicHtml, /闭包是函数与其词法环境的组合/);
 
-  assert.deepEqual(files.sort(), ["SkeletonPreview.tsx", "preview.css"]);
-  assert.match(preview, /from "react-loading-skeleton"/);
-  assert.match(preview, /baseColor="#eceae7"/);
-  assert.match(preview, /highlightColor="#f9f8f6"/);
-  assert.match(preview, /duration=\{2\.8\}/);
-  assert.match(preview, /sites-skeleton-search-placeholder/);
-  assert.match(packageJson, /"react-loading-skeleton": "3\.5\.0"/);
-
-  const shellIndex = preview.indexOf('className="sites-skeleton-shell"');
-  const statusIndex = preview.indexOf('className="sites-skeleton-status"');
-  assert.ok(shellIndex >= 0 && statusIndex > shellIndex);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(css, /inset:\s*0/);
-  assert.match(css, /opacity:\s*0\.52/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.doesNotMatch(css, /#020617|canvas|pets|progress/i);
-  assert.doesNotMatch(
-    preview,
-    /loading-spinner|status-mark|status-progress|canvas|cookie|random/i,
-  );
-
-  assert.match(page, /export const metadata:\s*Metadata/);
-  assert.match(page, /"codex-preview": "development"/);
-  assert.match(page, /<SkeletonPreview \/>/);
-  assert.match(layout, /title:\s*"Starter Project"/);
-  assert.doesNotMatch(layout, /codex-preview|_sites-preview|themeColor|\bViewport\b/);
-  assert.doesNotMatch(css, /(^|\s)(html|body)\s*\{/m);
-
-  await assert.rejects(
-    access(new URL("public/_sites-preview", templateRoot)),
-  );
+  const vipResponse = await render("/questions/q106");
+  const vipHtml = await vipResponse.text();
+  assert.match(vipHtml, /vip-answer-gate/);
+  assert.match(vipHtml, /了解会员/);
+  assert.doesNotMatch(vipHtml, /连接层通过网关集群维护长连接/);
 });

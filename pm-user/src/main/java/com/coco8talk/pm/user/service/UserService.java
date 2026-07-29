@@ -82,7 +82,15 @@ public interface UserService extends IService<User> {
      * @return 用户脱敏信息
      */
     Result<UserVO> queryUserById(Long userId);
-    
+
+    /**
+     * 根据用户id查询用户信息，由调用者身份决定返回完整字段（管理员）还是脱敏字段（其他人）
+     *
+     * @param userId 查询用户的Id
+     * @return 用户信息，管理员为 UserForAdminVO，其他人为 UserVO
+     */
+    Result<Object> queryUserByIdForCaller(Long userId);
+
     /**
      * 根据条件分页查询用户脱敏信息
      *

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.coco8talk.pm.api.auth.service.AuthSessionApi;
+import com.coco8talk.pm.api.auth.service.CurrentUserProvider;
 import com.coco8talk.pm.api.auth.dto.SessionUserDTO;
 import com.coco8talk.pm.api.auth.enums.UserRoleEnums;
 import com.coco8talk.pm.common.result.http.HttpStatusEnum;
@@ -44,11 +45,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     private final UserAccountSupport userAccountSupport;
     private final AuthSessionApi authSessionApi;
+    private final CurrentUserProvider currentUserProvider;
     private final java.util.List<UserDeletionCleaner> deletionCleaners;
 
-    public UserServiceImpl(UserAccountSupport userAccountSupport, AuthSessionApi authSessionApi, java.util.List<UserDeletionCleaner> deletionCleaners) {
+    public UserServiceImpl(UserAccountSupport userAccountSupport, AuthSessionApi authSessionApi,
+                            CurrentUserProvider currentUserProvider, java.util.List<UserDeletionCleaner> deletionCleaners) {
         this.userAccountSupport = userAccountSupport;
         this.authSessionApi = authSessionApi;
+        this.currentUserProvider = currentUserProvider;
         this.deletionCleaners = deletionCleaners;
     }
 
@@ -257,12 +261,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public Result<UserVO> queryUserById(Long userId) {
         // 检查用户是否存在
         User userFromDb = DtoValidationUtil.validateEntityExists(userId, this, "用户");
-        
+
         // 转换为VO
         UserVO userVO = UserMapstruct.INSTANCE.entityToVo(userFromDb);
         return Result.success(HttpStatusEnum.OK, userVO);
     }
-    
+
+    /**
+     * 根据ID查询用户，按调用者身份返回完整字段或脱敏字段
+     */
+    @Override
+    public Result<Object> queryUserByIdForCaller(Long userId) {
+        boolean callerIsAdmin = currentUserProvider.isLoggedIn() && currentUserProvider.isAdmin();
+        if (callerIsAdmin) {
+            return castToObjectResult(this.adminQueryUserById(userId));
+        }
+        return castToObjectResult(this.queryUserById(userId));
+    }
+
     /**
      * 分页查询用户（管理员）
      */
@@ -310,6 +326,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
     
     // ========== 私有方法 ==========
+
+    /**
+     * Result<T> 在运行时被擦除为 Result<Object>；这里只读取 code/data/message，从不依赖静态类型 T，
+     * 因此该 unchecked cast 是安全的——用它代替重新拼装 Result，避免丢失 fail()/error() 的 code。
+     */
+    @SuppressWarnings("unchecked")
+    private static <S> Result<Object> castToObjectResult(Result<S> source) {
+        return (Result<Object>) (Result<?>) source;
+    }
 
     /**
      * 创建查询条件

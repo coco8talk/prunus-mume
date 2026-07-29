@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol =
     requestHeaders.get("x-forwarded-proto") ??
     (host.startsWith("localhost") ? "http" : "https");
-  const socialImage = `${protocol}://${host}/og-admin.png`;
+  const socialImage = `${protocol}://${host}/og-questions.png`;
 
   return {
     title: {
@@ -23,14 +23,14 @@ export async function generateMetadata(): Promise<Metadata> {
       "Internal operations console for the Prunus Mume learning platform.",
     openGraph: {
       title: "Prunus Mume Admin Console",
-      description: "Content operations, in focus.",
+      description: "Questions, in focus.",
       type: "website",
       images: [{ url: socialImage, width: 1536, height: 1024 }],
     },
     twitter: {
       card: "summary_large_image",
       title: "Prunus Mume Admin Console",
-      description: "Content operations, in focus.",
+      description: "Questions, in focus.",
       images: [socialImage],
     },
   };

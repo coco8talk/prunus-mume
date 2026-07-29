@@ -38,10 +38,11 @@ npm run build
 ```
 
 The current API scope implements administrator login, logout, role gating,
-complete user management, and question-bank operations. Administrators can
-filter, sort, page, create, edit, and delete banks; generate individual or
-missing covers; open a bank; and bulk add or remove approved questions.
+complete user management, question-bank operations, and question management.
+Administrators can filter, sort, page, create, edit, and delete questions and
+banks; batch-delete questions; generate individual or missing covers; open a
+bank; and bulk add or remove approved questions.
 
-Question management and review modules remain visibly planned until their
-frontend contracts are supplied. Orders and payments are intentionally excluded
-because the backend has no administrator list/search endpoint.
+Review queue and history remain visibly planned until their frontend contracts
+are supplied. Orders and payments are intentionally excluded because the
+backend has no administrator list/search endpoint.

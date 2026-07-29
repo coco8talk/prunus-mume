@@ -45,7 +45,7 @@ test("server-renders protected user management metadata and loading state", asyn
 
   const html = await response.text();
   assert.match(html, /<title>Users · Prunus Mume Admin<\/title>/i);
-  assert.match(html, /http:\/\/localhost(?::3000)?\/og-admin\.png/);
+  assert.match(html, /http:\/\/localhost(?::3000)?\/og-questions\.png/);
   assert.match(html, /Preparing your operations workspace/);
 });
 
@@ -72,8 +72,17 @@ test("server-renders question-bank routes and metadata", async () => {
   assert.match(questionsHtml, /Preparing your operations workspace/);
 });
 
+test("server-renders question management metadata and loading state", async () => {
+  const response = await render("/questions");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /<title>Questions · Prunus Mume Admin<\/title>/i);
+  assert.match(html, /Preparing your operations workspace/);
+});
+
 test("keeps API and role contracts explicit", async () => {
-  const [api, auth, users, banks, contents] = await Promise.all([
+  const [api, auth, users, banks, contents, questions] = await Promise.all([
     readFile(new URL("../app/lib/api.ts", import.meta.url), "utf8"),
     readFile(
       new URL("../app/components/AuthProvider.tsx", import.meta.url),
@@ -89,6 +98,10 @@ test("keeps API and role contracts explicit", async () => {
     ),
     readFile(
       new URL("../app/components/BankQuestions.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../app/components/QuestionManagement.tsx", import.meta.url),
       "utf8",
     ),
   ]);
@@ -109,7 +122,11 @@ test("keeps API and role contracts explicit", async () => {
   assert.match(contents, /\/question-bank-relations\/banks\//);
   assert.match(contents, /method: "DELETE"/);
   assert.match(contents, /method: "POST"/);
-  for (const source of [users, banks, contents]) {
+  assert.match(questions, /"\/questions\/admin\/search"/);
+  assert.match(questions, /"\/questions\/admin\/batch"/);
+  assert.match(questions, /method: "DELETE"/);
+  assert.match(questions, /method: "PUT"/);
+  for (const source of [users, banks, contents, questions]) {
     assert.doesNotMatch(source, /["`]\/(?:internal|orders|payments)/i);
   }
 });

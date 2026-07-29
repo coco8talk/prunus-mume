@@ -9,7 +9,7 @@ import { BrandMark } from "./BrandMark";
 const navigation = [
   { label: "Users", icon: "◎", href: "/users" },
   { label: "Question banks", icon: "▤", href: "/question-banks" },
-  { label: "Questions", icon: "?", planned: true },
+  { label: "Questions", icon: "?", href: "/questions" },
   { label: "Review queue", icon: "✓", planned: true },
   { label: "Review history", icon: "↻", planned: true },
 ];
@@ -20,6 +20,9 @@ function pageContext(pathname: string) {
   }
   if (pathname.startsWith("/question-banks")) {
     return { title: "Question banks", description: "Collections, covers and contents" };
+  }
+  if (pathname.startsWith("/questions")) {
+    return { title: "Question management", description: "Question library and review state" };
   }
   return { title: "User management", description: "Accounts, roles and access" };
 }

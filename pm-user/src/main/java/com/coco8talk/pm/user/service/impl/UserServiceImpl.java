@@ -287,21 +287,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 参数校验
         DtoValidationUtil.validatePageCurrentFormat(queryUserDTO.getCurrent());
         DtoValidationUtil.validatePageSizeFormat(queryUserDTO.getPageSize());
-        
+
         // 创建查询条件
         LambdaQueryWrapper<User> wrapper = createQueryUserWrapper(queryUserDTO);
-        
+
         // 执行查询
         Page<User> userPage = this.page(new Page<>(queryUserDTO.getCurrent(), queryUserDTO.getPageSize()), wrapper);
         if (CollectionUtils.isEmpty(userPage.getRecords())) {
             return Result.fail(HttpStatusEnum.BAD_REQUEST, "根据当前条件未查询出用户");
         }
-        
+
         // 转换为VO
         Page<UserForAdminVO> userForAdminVoPage = UserMapstruct.INSTANCE.entityPageToForAdminVoPage(userPage);
         return Result.success(HttpStatusEnum.OK, userForAdminVoPage);
     }
-    
+
     /**
      * 分页查询用户
      */
@@ -313,6 +313,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 将管理员查询结果转换为普通用户VO
         Page<UserVO> userVoPage = UserMapstruct.INSTANCE.entityPageToVoPage(adminQueryPage);
         return Result.success(HttpStatusEnum.OK, userVoPage);
+    }
+
+    /**
+     * 分页查询用户，按调用者身份返回完整字段或脱敏字段
+     */
+    @Override
+    public Result<Object> queryUserPageForCaller(QueryUserDTO queryUserDTO) {
+        boolean callerIsAdmin = currentUserProvider.isLoggedIn() && currentUserProvider.isAdmin();
+        if (callerIsAdmin) {
+            return castToObjectResult(this.adminQueryUserPage(queryUserDTO));
+        }
+        return castToObjectResult(this.queryUserPage(queryUserDTO));
     }
 
     @Override

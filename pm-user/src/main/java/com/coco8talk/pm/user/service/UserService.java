@@ -99,6 +99,14 @@ public interface UserService extends IService<User> {
      */
     Result<Page<UserVO>> queryUserPage(QueryUserDTO queryUserDTO);
 
+    /**
+     * 根据条件分页查询用户，由调用者身份决定返回完整字段（管理员）还是脱敏字段（其他人）
+     *
+     * @param queryUserDTO 查询条件
+     * @return 查询结果，管理员为 Page<UserForAdminVO>，其他人为 Page<UserVO>
+     */
+    Result<Object> queryUserPageForCaller(QueryUserDTO queryUserDTO);
+
     /** 取当前登录用户脱敏信息（LoginUserVO）。未登录由 AuthSessionApi 抛业务异常。 */
     Result<LoginUserVO> getCurrentLoginUser();
 }

@@ -1,0 +1,9 @@
+spring:
+  data:
+    redis:
+      host: ${coco8talk.redis.host:localhost}
+      port: ${coco8talk.redis.port:6379}
+      database: ${coco8talk.redis.database:0}
+
+server:
+  port: 8081

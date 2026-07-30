@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { AuthProvider } from "./components/AuthProvider";
 import { Header } from "./components/Header";
 import "./globals.css";
 
@@ -36,11 +37,26 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const runtimeConfig = JSON.stringify({
+    apiBaseUrl: process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "",
+    membershipLevelId:
+      process.env.MEMBERSHIP_LEVEL_ID ??
+      process.env.NEXT_PUBLIC_MEMBERSHIP_LEVEL_ID ??
+      "",
+  }).replace(/</g, "\\u003c");
+
   return (
     <html lang="zh-CN">
       <body>
-        <Header />
-        {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__MEIWEN_RUNTIME_CONFIG__=${runtimeConfig}`,
+          }}
+        />
+        <AuthProvider>
+          <Header />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

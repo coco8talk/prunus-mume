@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
  * @since 2025/10/20 10:00
  */
 @RestController
-@RequestMapping("/alipay")
 @Log4j2
 @Tag(name = "支付宝支付控制器", description = "提供会员订单创建、支付宝网页支付及异步和同步支付结果处理能力")
 public class AlipayController {
@@ -38,7 +37,7 @@ public class AlipayController {
      * @param membershipOrderCreateDTO 会员订单创建请求参数
      * @return 会员订单创建响应视图对象
      */
-    @PostMapping("/submit")
+    @PostMapping("/membership-orders")
     @Operation(summary = "提交会员订单", description = "当前登录用户按会员等级、时长和币种创建待支付会员订单")
     public Result<MembershipOrderCreateVO> createOrder(@RequestBody MembershipOrderCreateDTO membershipOrderCreateDTO) {
         ObjectMyUtil.throwIfAllFieldsAreEmptyOrBlank(membershipOrderCreateDTO, HttpStatusEnum.BAD_REQUEST, "请求参数不能为空");
@@ -53,7 +52,7 @@ public class AlipayController {
      * @param outTradeNo 商户订单号
      * @return 支付页面链接
      */
-    @GetMapping(value = "/pay/{outTradeNo}", produces = "text/html;charset=UTF-8")
+    @GetMapping(value = "/membership-orders/{outTradeNo}/pay-page", produces = "text/html;charset=UTF-8")
     @Operation(summary = "支付会员订单", description = "校验订单归属后向支付宝发起网页支付并返回支付页面内容")
     public String pay(@PathVariable(value = "outTradeNo") String outTradeNo){
         boolean login = StpUtil.isLogin();
@@ -67,7 +66,7 @@ public class AlipayController {
      * @param request HttpServletRequest对象，包含支付宝回调请求参数
      * @return 处理结果，true表示成功，false表示失败
      */
-    @PostMapping("/callback")
+    @PostMapping("/alipay/callback")
     public String alipayCallback(HttpServletRequest request) {
         ThrowUtils.throwIfNull(request, HttpStatusEnum.BAD_REQUEST, "请求不能为空");
         return membershipOrderService.alipayCallback(request);
@@ -79,7 +78,7 @@ public class AlipayController {
      * @param request HttpServletRequest对象，包含支付宝同步返回参数
      * @return 处理结果
      */
-    @GetMapping("/return")
+    @GetMapping("/alipay/return")
     public String alipayReturn(HttpServletRequest request) {
         ThrowUtils.throwIfNull(request, HttpStatusEnum.BAD_REQUEST, "请求不能为空");
         String result = membershipOrderService.handleReturn(request);

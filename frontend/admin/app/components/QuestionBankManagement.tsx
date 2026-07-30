@@ -158,7 +158,7 @@ export function QuestionBankManagement() {
     setError("");
     try {
       const response = await apiRequest<PageResult<QuestionBank>>(
-        "/question-banks/admin/search",
+        "/question-banks/search",
         { method: "POST", body: JSON.stringify(requestBody) },
         token,
       );
@@ -292,17 +292,17 @@ export function QuestionBankManagement() {
       });
       if (modalMode === "create") {
         await apiRequest<string>(
-          "/question-banks/admin",
+          "/question-banks",
           { method: "POST", body: JSON.stringify(payload) },
           token,
         );
         setNotice(`Created “${form.title.trim()}”.`);
       } else if (selectedBank) {
         await apiRequest<boolean>(
-          "/question-banks/admin",
+          `/question-banks/${encodeURIComponent(selectedBank.id)}`,
           {
             method: "PUT",
-            body: JSON.stringify({ id: selectedBank.id, ...payload }),
+            body: JSON.stringify(payload),
           },
           token,
         );
@@ -324,10 +324,9 @@ export function QuestionBankManagement() {
     setError("");
     try {
       await apiRequest<boolean>(
-        "/question-banks/admin",
+        `/question-banks/${encodeURIComponent(deleteTarget.id)}`,
         {
           method: "DELETE",
-          body: JSON.stringify({ id: deleteTarget.id }),
         },
         token,
       );
@@ -350,7 +349,7 @@ export function QuestionBankManagement() {
     setError("");
     try {
       await apiRequest<string>(
-        `/covers/question-bank/${encodeURIComponent(bank.id)}`,
+        `/covers/question-banks/${encodeURIComponent(bank.id)}`,
         { method: "POST" },
         token,
       );
@@ -368,7 +367,7 @@ export function QuestionBankManagement() {
     setError("");
     try {
       const response = await apiRequest<number>(
-        "/covers/question-bank/batch",
+        "/covers/question-banks/batch",
         { method: "POST" },
         token,
       );

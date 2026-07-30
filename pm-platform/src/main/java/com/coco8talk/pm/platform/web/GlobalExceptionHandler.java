@@ -9,8 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.concurrent.TimeoutException;
 
@@ -33,6 +35,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public Result<Void> handleBadRequestException(BadRequestException e) {
         log.warn("客户端请求错误: {}", e.getMessage(), e);
+        return Result.fail(HttpStatusEnum.BAD_REQUEST, "请求参数错误");
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Result<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        log.warn("请求参数校验失败: {}", e.getMessage());
         return Result.fail(HttpStatusEnum.BAD_REQUEST, "请求参数错误");
     }
     
@@ -69,6 +77,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public Result<Void> handleNoHandlerFoundException(NoHandlerFoundException e) {
         log.warn("请求的资源不存在: {} {}", e.getHttpMethod(), e.getRequestURL());
+        return Result.fail(HttpStatusEnum.NOT_FOUND, "请求的资源不存在");
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Result<Void> handleNoResourceFoundException(NoResourceFoundException e) {
+        log.warn("请求的资源不存在: {} {}", e.getHttpMethod(), e.getResourcePath());
         return Result.fail(HttpStatusEnum.NOT_FOUND, "请求的资源不存在");
     }
     

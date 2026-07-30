@@ -2,25 +2,80 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useAuth } from "./components/AuthProvider";
 import { BankVisual } from "./components/BankVisual";
-import { featuredBanks } from "./data/mock";
+import { VipBadge } from "./components/VipBadge";
+import type { QuestionBank } from "./data/models";
+import { errorMessage } from "./lib/api";
+import { bankService, signInService } from "./lib/services";
 
-const activity = [
-  { day: "一", done: true },
-  { day: "二", done: true },
-  { day: "三", done: true },
-  { day: "四", done: true },
-  { day: "五", done: true },
-  { day: "六", done: false },
-  { day: "日", done: false },
-];
+const weekLabels = ["一", "二", "三", "四", "五", "六", "日"];
 
 export default function Home() {
   const router = useRouter();
+  const { status: authStatus } = useAuth();
   const [query, setQuery] = useState("");
+  const [featuredBanks, setFeaturedBanks] = useState<QuestionBank[]>([]);
   const [signedIn, setSignedIn] = useState(false);
-  const [activeBank, setActiveBank] = useState("frontend");
+  const [streak, setStreak] = useState(0);
+  const [signedDays, setSignedDays] = useState<number[]>([]);
+  const [signing, setSigning] = useState(false);
+  const [signMessage, setSignMessage] = useState("");
+  const [featuredError, setFeaturedError] = useState("");
+  const [activeBank, setActiveBank] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    bankService.search({ current: 1, pageSize: 3 }, controller.signal)
+      .then((result) => {
+        setFeaturedBanks(result.records);
+        setActiveBank(result.records[0]?.id ?? "");
+        setFeaturedError("");
+      })
+      .catch((error) => {
+        setFeaturedBanks([]);
+        setFeaturedError(errorMessage(error));
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+    const controller = new AbortController();
+    const today = new Date();
+    Promise.all([
+      signInService.today(controller.signal),
+      signInService.streak(controller.signal),
+      signInService.records(today.getFullYear(), today.getMonth() + 1, controller.signal),
+    ]).then(([todayStatus, currentStreak, records]) => {
+      setSignedIn(todayStatus);
+      setStreak(currentStreak);
+      setSignedDays(records);
+    }).catch((error) => {
+      if (!controller.signal.aborted) setSignMessage(errorMessage(error));
+    });
+    return () => controller.abort();
+  }, [authStatus]);
+
+  const activity = useMemo(() => {
+    const today = new Date();
+    const mondayOffset = (today.getDay() + 6) % 7;
+    const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - mondayOffset);
+    return weekLabels.map((day, index) => {
+      const date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index);
+      return {
+        day,
+        date: date.getDate(),
+        today: date.toDateString() === today.toDateString(),
+        done: authStatus === "authenticated" &&
+          date.getMonth() === today.getMonth() &&
+          signedDays.includes(date.getDate()),
+      };
+    });
+  }, [authStatus, signedDays]);
+  const hasSignedIn = authStatus === "authenticated" && signedIn;
+  const visibleStreak = authStatus === "authenticated" ? streak : 0;
 
   const filteredBanks = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -30,11 +85,36 @@ export default function Home() {
         item.toLowerCase().includes(term),
       ),
     );
-  }, [query]);
+  }, [featuredBanks, query]);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     router.push(query.trim() ? `/banks?query=${encodeURIComponent(query.trim())}` : "/banks");
+  }
+
+  async function handleSignIn() {
+    if (authStatus !== "authenticated") {
+      router.push("/login?next=%2F");
+      return;
+    }
+    if (signedIn || signing) return;
+    setSigning(true);
+    setSignMessage("");
+    try {
+      await signInService.add();
+      const today = new Date();
+      const [nextStreak, records] = await Promise.all([
+        signInService.streak(),
+        signInService.records(today.getFullYear(), today.getMonth() + 1),
+      ]);
+      setSignedIn(true);
+      setStreak(nextStreak);
+      setSignedDays(records);
+    } catch (error) {
+      setSignMessage(errorMessage(error));
+    } finally {
+      setSigning(false);
+    }
   }
 
   return (
@@ -70,23 +150,27 @@ export default function Home() {
         <aside className="today-card" data-od-id="today-progress-card">
           <div className="today-card-top">
             <div>
-              <span className="eyebrow">今日练习</span>
-              <strong>12<span>/ 20</span></strong>
+              <span className="eyebrow">精选题库</span>
+              <strong>{featuredBanks.length}<span> 个推荐</span></strong>
             </div>
-            <div className="progress-ring" aria-label="今日练习完成 60%">
-              <span>60%</span>
+            <div className="progress-ring" aria-label={`${featuredBanks.length} 个推荐题库`}>
+              <span>{featuredBanks.length}</span>
             </div>
           </div>
           <div className="mini-divider" />
           <div className="resume-row">
-            <div className="resume-icon" aria-hidden="true">JS</div>
+            <div className="resume-icon" aria-hidden="true">题</div>
             <div>
-              <span>上次练到</span>
-              <b>JavaScript 闭包与作用域</b>
+              <span>推荐开始</span>
+              <b>{featuredBanks[0]?.title ?? "探索梅问题库"}</b>
             </div>
           </div>
-          <Link className="primary-button" href="/questions/q101" data-od-id="resume-learning-button">
-            继续练习
+          <Link
+            className="primary-button"
+            href={featuredBanks[0] ? `/banks/${featuredBanks[0].id}` : "/banks"}
+            data-od-id="resume-learning-button"
+          >
+            开始探索
             <span aria-hidden="true">→</span>
           </Link>
         </aside>
@@ -105,6 +189,7 @@ export default function Home() {
           </div>
 
           <div className="bank-list" id="all-banks">
+            {featuredError && <div className="feedback error" role="alert">{featuredError}</div>}
             {filteredBanks.map((bank) => (
               <article
                 className={`bank-card ${activeBank === bank.id ? "selected" : ""}`}
@@ -149,61 +234,59 @@ export default function Home() {
             <div className="streak-header">
               <div>
                 <span className="eyebrow">连续签到</span>
-                <strong><em>{signedIn ? 13 : 12}</em> 天</strong>
+                <strong><em>{visibleStreak}</em> 天</strong>
               </div>
-              <span className="streak-mark" aria-hidden="true">12</span>
+              <span className="streak-mark" aria-hidden="true">{visibleStreak}</span>
             </div>
             <div className="week-row">
-              {activity.map((item, index) => {
-                const isToday = index === 5;
-                return (
-                  <div key={item.day} className={isToday ? "today" : ""}>
-                    <span className={item.done || (isToday && signedIn) ? "done" : ""}>
-                      {item.done || (isToday && signedIn) ? "✓" : index + 22}
+              {activity.map((item) => (
+                  <div key={item.day} className={item.today ? "today" : ""}>
+                    <span className={item.done ? "done" : ""}>
+                      {item.done ? "✓" : item.date}
                     </span>
                     <small>{item.day}</small>
                   </div>
-                );
-              })}
+              ))}
             </div>
+            {signMessage && <p className="field-error" role="alert">{signMessage}</p>}
             <button
-              className={signedIn ? "signin-button complete" : "signin-button"}
+              className={hasSignedIn ? "signin-button complete" : "signin-button"}
               type="button"
-              onClick={() => setSignedIn(true)}
-              disabled={signedIn}
+              onClick={handleSignIn}
+              disabled={hasSignedIn || signing}
               data-od-id="daily-signin-button"
             >
-              {signedIn ? "今日已签到" : "完成今日签到"}
+              {hasSignedIn ? "今日已签到" : signing ? "正在签到…" : authStatus === "authenticated" ? "完成今日签到" : "登录后签到"}
             </button>
           </section>
 
           <section className="plan-card" data-od-id="weekly-plan-card">
             <div className="plan-title">
               <div>
-                <span className="eyebrow">本周计划</span>
-                <h3>稳步完成 80 题</h3>
+                <span className="eyebrow">本周签到</span>
+                <h3>保持稳定学习节奏</h3>
               </div>
-              <span className="plan-count">48 / 80</span>
+              <span className="plan-count">{activity.filter((item) => item.done).length} / 7</span>
             </div>
             <div className="plan-bars" aria-label="本周练习趋势">
-              {[62, 86, 45, 76, 58, 30, 12].map((height, index) => (
-                <div key={index}>
-                  <span style={{ height: `${height}%` }} className={index < 5 ? "filled" : ""} />
-                  <small>{activity[index].day}</small>
+              {activity.map((item) => (
+                <div key={item.day}>
+                  <span style={{ height: item.done ? "76%" : "12%" }} className={item.done ? "filled" : ""} />
+                  <small>{item.day}</small>
                 </div>
               ))}
             </div>
             <div className="plan-summary">
-              <span>比上周多完成</span>
-              <b>+16 题</b>
+              <span>本周已签到</span>
+              <b>{activity.filter((item) => item.done).length} 天</b>
             </div>
           </section>
 
           <Link className="vip-card" href="/membership" data-od-id="membership-upgrade-card">
-            <span className="vip-label">PRO</span>
+            <VipBadge />
             <div>
-              <strong>解锁完整题解</strong>
-              <span>会员专享解析与进阶题库</span>
+              <strong>开通梅问会员</strong>
+              <span>解锁会员题完整解析与全部会员题库</span>
             </div>
             <span aria-hidden="true">→</span>
           </Link>

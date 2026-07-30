@@ -31,7 +31,7 @@ public class CoverImageController {
     /**
      * 为指定题库生成封面图片。
      */
-    @PostMapping("/question-bank/{id}")
+    @PostMapping("/question-banks/{id}")
     @Operation(summary = "为指定题库生成封面图片", description = "由管理员为指定题库生成 PNG 文字封面、上传至腾讯云 COS 并回写地址")
     @SaCheckRole(AuthConstant.ADMIN_USER_ROLE)
     public Result<String> generateBankCover(@PathVariable("id") String idStr) {
@@ -43,7 +43,7 @@ public class CoverImageController {
     /**
      * 批量为所有题库生成封面图片。
      */
-    @PostMapping("/question-bank/batch")
+    @PostMapping("/question-banks/batch")
     @Operation(summary = "批量为所有题库生成封面图片", description = "由管理员为全部题库逐一生成并保存腾讯云 COS 封面图片")
     @SaCheckRole(AuthConstant.ADMIN_USER_ROLE)
     public Result<Integer> generateAllBankCovers() {

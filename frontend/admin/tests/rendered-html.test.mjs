@@ -150,13 +150,13 @@ test("keeps API and role contracts explicit", async () => {
   assert.match(users, /"\/users"/);
   assert.match(users, /method: "DELETE"/);
   assert.match(users, /method: "PUT"/);
-  assert.match(banks, /"\/question-banks\/admin\/search"/);
-  assert.match(banks, /"\/covers\/question-bank\/batch"/);
+  assert.match(banks, /"\/question-banks\/search"/);
+  assert.match(banks, /"\/covers\/question-banks\/batch"/);
   assert.match(contents, /\/question-bank-relations\/banks\//);
   assert.match(contents, /method: "DELETE"/);
   assert.match(contents, /method: "POST"/);
-  assert.match(questions, /"\/questions\/admin\/search"/);
-  assert.match(questions, /"\/questions\/admin\/batch"/);
+  assert.match(questions, /"\/questions\/search"/);
+  assert.match(questions, /"\/questions\/batch"/);
   assert.match(questions, /method: "DELETE"/);
   assert.match(questions, /method: "PUT"/);
   assert.match(queue, /"\/question-reviews\/pending\/count"/);
@@ -168,4 +168,8 @@ test("keeps API and role contracts explicit", async () => {
   for (const source of [users, banks, contents, questions, queue, history]) {
     assert.doesNotMatch(source, /["`]\/(?:internal|orders|payments)/i);
   }
+  for (const source of [banks, questions]) {
+    assert.doesNotMatch(source, /\/(?:question-banks|questions)\/admin/);
+  }
+  assert.doesNotMatch(banks, /\/covers\/question-bank\//);
 });

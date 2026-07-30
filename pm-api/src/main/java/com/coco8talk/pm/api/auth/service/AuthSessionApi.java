@@ -2,6 +2,7 @@ package com.coco8talk.pm.api.auth.service;
 
 import com.coco8talk.pm.api.auth.dto.SessionUserDTO;
 
+
 public interface AuthSessionApi {
     void login(SessionUserDTO principal);
     void logout();

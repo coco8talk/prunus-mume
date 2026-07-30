@@ -10,7 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 
@@ -18,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -45,7 +51,7 @@ class QuestionControllerTest {
         question.setTitle("Java 中的虚拟线程是什么？");
         question.setTags(List.of("Java", "并发"));
         question.setDifficulty(2);
-        when(questionService.queryQuestionById(questionId))
+        when(questionService.queryQuestionByIdForCaller(questionId))
                 .thenReturn(Result.success(HttpStatusEnum.OK, question));
 
         mockMvc.perform(get("/questions/{id}", "9007199254740993"))
@@ -58,7 +64,7 @@ class QuestionControllerTest {
                 .andExpect(jsonPath("$.data.tags[1]").value("并发"))
                 .andExpect(jsonPath("$.data.difficulty").value(2));
 
-        verify(questionService).queryQuestionById(questionId);
+        verify(questionService).queryQuestionByIdForCaller(questionId);
     }
 
     @Test
@@ -70,5 +76,40 @@ class QuestionControllerTest {
                 .andExpect(jsonPath("$.data").doesNotExist());
 
         verifyNoInteractions(questionService);
+    }
+
+    @Test
+    void createQuestionMapsBeanValidationFailureToBadRequestResult() throws Exception {
+        mockMvc.perform(post("/questions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("请求参数错误"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verifyNoInteractions(questionService);
+    }
+
+    @Test
+    void missingStaticResourceMapsToNotFoundResult() throws Exception {
+        MockMvc resourceMockMvc = standaloneSetup(new MissingResourceController())
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
+        resourceMockMvc.perform(get("/missing-resource"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").value("请求的资源不存在"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @RestController
+    static class MissingResourceController {
+
+        @GetMapping("/missing-resource")
+        void missingResource() throws NoResourceFoundException {
+            throw new NoResourceFoundException(HttpMethod.GET, "missing-resource");
+        }
     }
 }

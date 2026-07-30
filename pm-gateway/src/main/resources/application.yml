@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: pm-gateway
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        namespace: ${NACOS_NAMESPACE:}
+  config:
+    import:
+      - nacos:pm-gateway.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true

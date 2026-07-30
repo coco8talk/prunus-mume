@@ -184,6 +184,28 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         return Result.success(HttpStatusEnum.OK, baseVO);
     }
 
+    @Override
+    public Result<QuestionBankDetailVO> queryQuestionBankByIdForCaller(
+        Long questionBankId, Boolean needQueryQuestionList) {
+        boolean callerIsAdmin = currentUserProvider.isLoggedIn() && currentUserProvider.isAdmin();
+        if (!callerIsAdmin) {
+            return queryQuestionBankById(questionBankId, needQueryQuestionList);
+        }
+
+        DtoValidationUtil.validateIdFormat(questionBankId, "题库");
+        QuestionBank questionBank = this.getById(questionBankId);
+        if (questionBank == null) {
+            return Result.fail(HttpStatusEnum.BAD_REQUEST, "题库不存在");
+        }
+
+        QuestionBankDetailVO detailVO = QuestionBankMapStruct.INSTANCE.entityToVo(questionBank);
+        fillCreateUser(detailVO, questionBank.getCreateUserId());
+        if (needQueryQuestionList != null && needQueryQuestionList) {
+            fillQuestionList(detailVO, questionBankId);
+        }
+        return Result.success(HttpStatusEnum.OK, detailVO);
+    }
+
     /**
      * 经多级缓存加载题库基础详情(含创建者信息,不含题目列表)。
      * loader 对不存在的 id 返回 {@code null}(缓存空值哨兵防穿透)。
@@ -272,6 +294,20 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         // 转换为VO
         Page<QuestionBankVO> questionBankVoPage = QuestionBankMapStruct.INSTANCE.entityPageToVoPage(questionBankPage);
         return Result.success(HttpStatusEnum.OK, questionBankVoPage);
+    }
+
+    @Override
+    public Result<Object> queryPageQuestionBankForCaller(QueryQuestionBankDTO queryQuestionBankDTO) {
+        boolean callerIsAdmin = currentUserProvider.isLoggedIn() && currentUserProvider.isAdmin();
+        if (callerIsAdmin) {
+            return castToObjectResult(adminQueryPageQuestionBank(queryQuestionBankDTO));
+        }
+        return castToObjectResult(queryPageQuestionBank(queryQuestionBankDTO));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <S> Result<Object> castToObjectResult(Result<S> source) {
+        return (Result<Object>) (Result<?>) source;
     }
     
     // ========== 私有方法 ==========
@@ -409,17 +445,22 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
      */
     private QuestionBankDetailVO convertToBaseVo(QuestionBank questionBank) {
         QuestionBankDetailVO questionBankDetailVO = QuestionBankMapStruct.INSTANCE.entityToVo(questionBank);
+        questionBankDetailVO.setQuestionCount(null);
+        questionBankDetailVO.setEditTime(null);
 
         // 填充创建用户信息
-        Long createUserId = questionBank.getCreateUserId();
+        fillCreateUser(questionBankDetailVO, questionBank.getCreateUserId());
+
+        return questionBankDetailVO;
+    }
+
+    private void fillCreateUser(QuestionBankDetailVO questionBankDetailVO, Long createUserId) {
         if (!ObjectUtils.isEmpty(createUserId)) {
             UserView userView = userApi.getById(createUserId);
             if (userView != null) {
                 questionBankDetailVO.setUserVO(userView);
             }
         }
-
-        return questionBankDetailVO;
     }
 
     /**
@@ -433,7 +474,5 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         }
     }
 }
-
-
 
 

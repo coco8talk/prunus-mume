@@ -53,12 +53,13 @@ public class UserApiImpl implements UserApi {
     }
 
     @Override
-    public void updateAvatar(Long userId, String avatarUrl) {
-        userMapper.updateAvatarById(avatarUrl, String.valueOf(userId));
+    public void updateAvatar(Long userId, UserApi.AvatarRequest request) {
+        userMapper.updateAvatarById(request.avatarUrl(), String.valueOf(userId));
     }
 
     @Override
-    public void grantVip(Long userId, Period period) {
+    public void grantVip(Long userId, UserApi.VipRequest request) {
+        Period period = request == null ? null : Period.parse(request.period());
         if (userId == null || period == null) {
             return;
         }
@@ -84,7 +85,9 @@ public class UserApiImpl implements UserApi {
     }
 
     @Override
-    public Long registerAccount(String userAccount, String userPassword) {
+    public Long registerAccount(UserApi.RegisterAccountRequest request) {
+        String userAccount = request.userAccount();
+        String userPassword = request.userPassword();
         userAccountSupport.validateUserAccountFormat(userAccount);
         userAccountSupport.validateUserPasswordFormat(userPassword);
 
@@ -108,7 +111,9 @@ public class UserApiImpl implements UserApi {
     }
 
     @Override
-    public LoginUserView verifyCredentials(String userAccount, String userPassword) {
+    public LoginUserView verifyCredentials(UserApi.VerifyCredentialsRequest request) {
+        String userAccount = request.userAccount();
+        String userPassword = request.userPassword();
         userAccountSupport.validateUserAccountFormat(userAccount);
         userAccountSupport.validateUserPasswordFormat(userPassword);
 

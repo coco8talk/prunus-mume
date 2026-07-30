@@ -4,6 +4,7 @@ import com.coco8talk.pm.common.result.Result;
 import com.coco8talk.pm.filestorage.service.AvatarService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,7 +16,7 @@ import java.util.Map;
  * @since 2025/10/16 20:43
  **/
 @RestController
-@RequestMapping("/avatar")
+@RequestMapping("/avatars")
 @Log4j2
 public class AvatarController {
     
@@ -25,12 +26,12 @@ public class AvatarController {
         this.avatarService = avatarService;
     }
     
-    @GetMapping("/getAvatarCredentials")
+    @GetMapping("/credentials")
     public Result<Map<String, Object>> getAvatarCredentials(@RequestParam String filename) {
         return avatarService.getAvatarCredentials(filename);
     }
     
-    @GetMapping("/confirmAvatarUpload")
+    @PostMapping("/confirmation")
     public Result<String> confirmAvatarUpload() {
         return avatarService.confirmAvatarUpload();
     }

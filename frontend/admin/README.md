@@ -13,7 +13,7 @@ Internal React and TypeScript operations console for Prunus Mume administrators.
 Copy `.env.example` to `.env.local` and set the backend origin:
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8082/api
 ```
 
 The value may be left empty when the API is served from the same origin.
@@ -28,7 +28,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3001`.
 
 ## Verify
 
@@ -38,11 +38,12 @@ npm run build
 ```
 
 The current API scope implements administrator login, logout, role gating,
-complete user management, question-bank operations, and question management.
+complete user management, question-bank operations, question management, and
+the question-review workflow.
 Administrators can filter, sort, page, create, edit, and delete questions and
 banks; batch-delete questions; generate individual or missing covers; open a
-bank; and bulk add or remove approved questions.
+bank; bulk add or remove approved questions; review pending questions inline;
+and search the complete review decision history.
 
-Review queue and history remain visibly planned until their frontend contracts
-are supplied. Orders and payments are intentionally excluded because the
-backend has no administrator list/search endpoint.
+Orders and payments are intentionally excluded because the backend has no
+administrator list/search endpoint.

@@ -1,0 +1,27 @@
+server:
+  servlet:
+    context-path: /api
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+sa-token:
+  token-name: satoken
+  timeout: 2592000
+  active-timeout: 1800
+  is-concurrent: true
+  is-share: true
+
+coco8talk:
+  web:
+    allowed-origins:
+      - http://localhost:3000
+      - http://127.0.0.1:3000
+      - http://localhost:3001
+      - http://127.0.0.1:3001

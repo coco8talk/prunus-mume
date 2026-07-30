@@ -376,7 +376,70 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         return queryQuestionPageWithSql(queryQuestionDTO);
     }
 
+    @Override
+    public Result<Long> createQuestionForCaller(CreateQuestionDTO createQuestionDTO) {
+        if (currentUserProvider.isAdmin()) {
+            return adminCreateQuestion(createQuestionDTO);
+        }
+        return createQuestion(createQuestionDTO);
+    }
+
+    @Override
+    public Result<Void> deleteQuestionForCaller(Long questionId) {
+        DeleteQuestionDTO deleteQuestionDTO = new DeleteQuestionDTO();
+        deleteQuestionDTO.setId(questionId);
+        if (currentUserProvider.isAdmin()) {
+            return adminDeleteQuestion(deleteQuestionDTO);
+        }
+        return deleteQuestion(deleteQuestionDTO);
+    }
+
+    @Override
+    public Result<Boolean> editQuestionForCaller(EditQuestionDTO editQuestionDTO) {
+        if (currentUserProvider.isAdmin()) {
+            return adminEditQuestion(editQuestionDTO);
+        }
+        return editQuestion(editQuestionDTO);
+    }
+
+    @Override
+    public Result<Object> queryQuestionByIdForCaller(Long id) {
+        boolean callerIsAdmin = currentUserProvider.isLoggedIn() && currentUserProvider.isAdmin();
+        if (callerIsAdmin) {
+            return castToObjectResult(queryQuestionByIdForAdmin(id));
+        }
+        return castToObjectResult(queryQuestionById(id));
+    }
+
+    @Override
+    public Result<Object> queryQuestionPageForCaller(QueryQuestionDTO queryQuestionDTO) {
+        boolean callerIsAdmin = currentUserProvider.isLoggedIn() && currentUserProvider.isAdmin();
+        if (callerIsAdmin) {
+            return castToObjectResult(adminQueryQuestionPage(queryQuestionDTO));
+        }
+        return castToObjectResult(queryQuestionPage(queryQuestionDTO));
+    }
+
     // ========== 私有查询方法 ==========
+
+    private Result<QuestionForAdminVO> queryQuestionByIdForAdmin(Long id) {
+        Question question = DtoValidationUtil.validateEntityExists(id, this, "题目");
+        QuestionForAdminVO questionVO = QuestionMapStruct.INSTANCE.entityToAdminVo(question);
+        questionVO.setCreateUser(userApi.getById(question.getCreateUserId()));
+
+        LambdaQueryWrapper<QuestionReview> reviewWrapper = Wrappers.lambdaQuery(QuestionReview.class)
+            .eq(QuestionReview::getQuestionId, id);
+        QuestionReview questionReview = questionReviewMapper.selectOne(reviewWrapper);
+        if (questionReview != null) {
+            questionVO.setReviewVo(QuestionReviewMapStruct.INSTANCE.entityToVo(questionReview));
+        }
+        return Result.success(HttpStatusEnum.OK, questionVO);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <S> Result<Object> castToObjectResult(Result<S> source) {
+        return (Result<Object>) (Result<?>) source;
+    }
 
     /**
      * 使用SQL查询题目（管理员）

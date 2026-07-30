@@ -54,6 +54,9 @@ public interface QuestionBankService extends IService<QuestionBank> {
      * @return 查询结果，题库脱敏信息
      */
     Result<QuestionBankDetailVO> queryQuestionBankById(Long questionBankId, Boolean needQueryQuestionList);
+
+    /** 管理员详情包含管理字段，其他调用者返回公开字段。 */
+    Result<QuestionBankDetailVO> queryQuestionBankByIdForCaller(Long questionBankId, Boolean needQueryQuestionList);
     
     /**
      * 分页查询题库（管理员）
@@ -70,4 +73,7 @@ public interface QuestionBankService extends IService<QuestionBank> {
      * @return 分页查询结果
      */
     Result<Page<QuestionBankVO>> queryPageQuestionBank(@Valid QueryQuestionBankDTO queryQuestionBankDTO);
+
+    /** 管理员返回管理视图，其他调用者返回公开视图。 */
+    Result<Object> queryPageQuestionBankForCaller(@Valid QueryQuestionBankDTO queryQuestionBankDTO);
 }

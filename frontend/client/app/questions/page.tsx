@@ -1,16 +1,21 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Pagination } from "@/app/components/Pagination";
 import { QuestionRow } from "@/app/components/QuestionRow";
-import { banks, questions } from "@/app/data/mock";
+import { errorMessage } from "@/app/lib/api";
+import { bankService, difficultyRequest, questionService } from "@/app/lib/services";
+import type { Difficulty, Question, QuestionBank } from "@/app/data/models";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
+const difficulties = ["全部", "入门", "中级", "进阶"] as const;
+const popularTags = ["全部", "JavaScript", "React", "动态规划", "系统设计", "Java", "MySQL", "RAG"];
 
 type FilterControlsProps = {
   difficulty: string;
   bankId: string;
   tag: string;
+  banks: QuestionBank[];
   onDifficulty: (value: string) => void;
   onBank: (value: string) => void;
   onTag: (value: string) => void;
@@ -21,6 +26,7 @@ function FilterControls({
   difficulty,
   bankId,
   tag,
+  banks,
   onDifficulty,
   onBank,
   onTag,
@@ -31,7 +37,7 @@ function FilterControls({
       <label>
         <span>难度</span>
         <select value={difficulty} onChange={(event) => onDifficulty(event.target.value)}>
-          {["全部", "入门", "中级", "进阶"].map((item) => <option key={item}>{item}</option>)}
+          {difficulties.map((item) => <option key={item}>{item}</option>)}
         </select>
       </label>
       <label>
@@ -44,7 +50,7 @@ function FilterControls({
       <div>
         <span className="filter-label">热门标签</span>
         <div className="filter-chips">
-          {["全部", "JavaScript", "React", "动态规划", "系统设计", "Java", "MySQL", "RAG"].map((item) => (
+          {popularTags.map((item) => (
             <button
               className={tag === item ? "active" : ""}
               type="button"
@@ -68,28 +74,53 @@ export default function QuestionsPage() {
   const [bankId, setBankId] = useState("全部");
   const [tag, setTag] = useState("全部");
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState<"ready" | "loading" | "error">("ready");
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [banks, setBanks] = useState<QuestionBank[]>([]);
+  const [total, setTotal] = useState(0);
+  const [status, setStatus] = useState<"ready" | "loading" | "error">("loading");
+  const [message, setMessage] = useState("");
+  const [bankMessage, setBankMessage] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [retry, setRetry] = useState(0);
 
-  const filtered = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    return questions.filter((question) => {
-      const matchesQuery =
-        !term ||
-        [question.title, question.content, ...question.tags].some((value) =>
-          value.toLowerCase().includes(term),
-        );
-      return (
-        matchesQuery &&
-        (difficulty === "全部" || question.difficulty === difficulty) &&
-        (bankId === "全部" || question.bankId === bankId) &&
-        (tag === "全部" || question.tags.includes(tag))
-      );
+  useEffect(() => {
+    const controller = new AbortController();
+    bankService.search({ current: 1, pageSize: 20 }, controller.signal)
+      .then((result) => {
+        setBanks(result.records);
+        setBankMessage("");
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setBankMessage(errorMessage(error));
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const numericBankId = bankId === "全部" ? undefined : Number(bankId);
+
+    questionService.search({
+      current: page,
+      pageSize: PAGE_SIZE,
+      searchText: query.trim() || undefined,
+      questionBankId: Number.isFinite(numericBankId) ? numericBankId : undefined,
+      tags: tag === "全部" ? undefined : [tag],
+      difficulty: difficulty === "全部" ? undefined : difficultyRequest(difficulty as Difficulty),
+    }, controller.signal).then((result) => {
+      setQuestions(result.records);
+      setTotal(result.total);
+      setStatus("ready");
+    }).catch((error) => {
+      if (controller.signal.aborted) return;
+      setMessage(errorMessage(error));
+      setStatus("error");
     });
-  }, [bankId, difficulty, query, tag]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    return () => controller.abort();
+  }, [bankId, difficulty, page, query, retry, tag]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   function updateFilter(setter: (value: string) => void, value: string) {
     setter(value);
@@ -98,16 +129,8 @@ export default function QuestionsPage() {
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus("loading");
     setPage(1);
-    window.setTimeout(() => {
-      if (input.trim().includes("错误")) {
-        setStatus("error");
-      } else {
-        setQuery(input);
-        setStatus("ready");
-      }
-    }, 550);
+    setQuery(input);
   }
 
   function resetFilters() {
@@ -117,13 +140,13 @@ export default function QuestionsPage() {
     setBankId("全部");
     setTag("全部");
     setPage(1);
-    setStatus("ready");
   }
 
   const controls = {
     difficulty,
     bankId,
     tag,
+    banks,
     onDifficulty: (value: string) => updateFilter(setDifficulty, value),
     onBank: (value: string) => updateFilter(setBankId, value),
     onTag: (value: string) => updateFilter(setTag, value),
@@ -153,18 +176,16 @@ export default function QuestionsPage() {
 
       <div className="question-browser">
         <aside className="desktop-filters" aria-label="题目筛选">
-          <div className="filter-title">
-            <b>筛选题目</b>
-            <span>{filtered.length} 个结果</span>
-          </div>
+          <div className="filter-title"><b>筛选题目</b><span>{total} 个结果</span></div>
           <FilterControls {...controls} />
         </aside>
 
         <section className="question-results">
+          {bankMessage && <div className="feedback error" role="alert">{bankMessage}</div>}
           <div className="results-heading">
             <div>
               <p className="section-kicker">搜索结果</p>
-              <h2>{status === "ready" ? `${filtered.length} 道题目` : "正在更新"}</h2>
+              <h2>{status === "ready" ? `${total} 道题目` : "正在更新"}</h2>
             </div>
             <button className="mobile-filter-button" type="button" onClick={() => setDrawerOpen(true)}>
               筛选 <span aria-hidden="true">☰</span>
@@ -179,10 +200,10 @@ export default function QuestionsPage() {
             <div className="state-panel error" role="alert" data-od-id="question-error-state">
               <span aria-hidden="true">!</span>
               <h2>暂时无法获取题目</h2>
-              <p>网络好像走神了，请稍后再试。</p>
-              <button type="button" onClick={() => setStatus("ready")}>重新加载</button>
+              <p>{message}</p>
+              <button type="button" onClick={() => setRetry((value) => value + 1)}>重新加载</button>
             </div>
-          ) : visible.length === 0 ? (
+          ) : questions.length === 0 ? (
             <div className="state-panel empty" role="status" data-od-id="question-empty-state">
               <span aria-hidden="true">题</span>
               <h2>没有找到匹配的题目</h2>
@@ -192,9 +213,7 @@ export default function QuestionsPage() {
           ) : (
             <>
               <div className="question-list">
-                {visible.map((question) => (
-                  <QuestionRow question={question} key={question.id} showBank />
-                ))}
+                {questions.map((question) => <QuestionRow question={question} key={question.id} />)}
               </div>
               <Pagination current={page} total={totalPages} onChange={setPage} />
             </>
@@ -217,7 +236,7 @@ export default function QuestionsPage() {
             </div>
             <FilterControls {...controls} />
             <button className="form-primary" type="button" onClick={() => setDrawerOpen(false)}>
-              查看 {filtered.length} 个结果
+              查看 {total} 个结果
             </button>
           </aside>
         </div>

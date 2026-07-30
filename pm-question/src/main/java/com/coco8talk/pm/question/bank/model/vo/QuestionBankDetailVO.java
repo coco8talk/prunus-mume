@@ -44,11 +44,21 @@ public class QuestionBankDetailVO {
      * 题库描述
      */
     private String description;
+
+    /**
+     * 题目数量（仅管理员可见）
+     */
+    private Integer questionCount;
     
     /**
      * 创建时间
      */
     private LocalDateTime createTime;
+
+    /**
+     * 编辑时间（仅管理员可见）
+     */
+    private LocalDateTime editTime;
     
     /**
      * 更新时间

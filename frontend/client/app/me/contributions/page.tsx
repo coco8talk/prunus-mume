@@ -2,14 +2,23 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { PersonalShell } from "@/app/components/PersonalShell";
-import {
-  initialContributions,
-  type Contribution,
-  type ContributionStatus,
-} from "@/app/data/personal";
-import type { Difficulty } from "@/app/data/mock";
+import { ProtectedContent, useAuth } from "@/app/components/AuthProvider";
+import type { Difficulty } from "@/app/data/models";
+import { errorMessage } from "@/app/lib/api";
+import { difficultyRequest, questionService } from "@/app/lib/services";
 
-type Draft = Pick<Contribution, "title" | "content" | "answer" | "difficulty" | "recommendVip"> & {
+type Contribution = {
+  id: string;
+  title: string;
+  content: string;
+  answer: string;
+  tags: string[];
+  difficulty: Difficulty;
+  status: "pending";
+  submittedAt: string;
+};
+
+type Draft = Pick<Contribution, "title" | "content" | "answer" | "difficulty"> & {
   tags: string;
 };
 
@@ -19,24 +28,22 @@ const emptyDraft: Draft = {
   answer: "",
   tags: "",
   difficulty: "中级",
-  recommendVip: false,
-};
-
-const statusLabels: Record<ContributionStatus, string> = {
-  pending: "待审核",
-  approved: "已通过",
-  rejected: "未通过",
 };
 
 export default function ContributionsPage() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<"submit" | "list">("submit");
-  const [contributions, setContributions] = useState(initialContributions);
+  const [contributions, setContributions] = useState<Contribution[]>([]);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Contribution | null>(null);
   const [deleting, setDeleting] = useState<Contribution | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof Draft, string>>>({});
   const [notice, setNotice] = useState("");
+  const [noticeType, setNoticeType] = useState<"success" | "error">("success");
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
 
   useEffect(() => {
     function closeModal(event: KeyboardEvent) {
@@ -48,6 +55,20 @@ export default function ContributionsPage() {
     window.addEventListener("keydown", closeModal);
     return () => window.removeEventListener("keydown", closeModal);
   }, []);
+
+  useEffect(() => {
+    if (!user || ownerUserId === user.id) return;
+    void Promise.resolve().then(() => {
+      setContributions([]);
+      setDraft(emptyDraft);
+      setEditingId(null);
+      setViewing(null);
+      setDeleting(null);
+      setNotice("");
+      setTab("submit");
+      setOwnerUserId(user.id);
+    });
+  }, [ownerUserId, user]);
 
   function updateDraft<K extends keyof Draft>(field: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -64,32 +85,50 @@ export default function ContributionsPage() {
     return Object.keys(next).length === 0;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setNotice("");
     if (!validate()) return;
     const normalizedTags = draft.tags.split(/[,，]/).map((item) => item.trim()).filter(Boolean);
+    setSubmitting(true);
 
-    if (editingId) {
-      setContributions((current) => current.map((item) => (
-        item.id === editingId
-          ? { ...item, ...draft, tags: normalizedTags, status: "pending", reviewComment: undefined }
-          : item
-      )));
-      setNotice("修改已保存，并重新进入审核。");
-    } else {
-      setContributions((current) => [{
-        id: `c-${Date.now()}`,
-        ...draft,
+    try {
+      const request = {
+        title: draft.title.trim(),
+        content: draft.content.trim(),
+        answer: draft.answer.trim(),
         tags: normalizedTags,
-        status: "pending",
-        submittedAt: new Intl.DateTimeFormat("en-CA").format(new Date()),
-      }, ...current]);
-      setNotice("题目已提交，我们会尽快完成审核。");
+        difficulty: difficultyRequest(draft.difficulty),
+      };
+      if (editingId) {
+        await questionService.update({ ...request, id: editingId });
+        setContributions((current) => current.map((item) => (
+          item.id === editingId
+            ? { ...item, ...draft, tags: normalizedTags, status: "pending" }
+            : item
+        )));
+        setNotice("修改已保存，并重新进入审核。");
+      } else {
+        const id = await questionService.create(request);
+        setContributions((current) => [{
+          id: String(id),
+          ...draft,
+          tags: normalizedTags,
+          status: "pending",
+          submittedAt: new Intl.DateTimeFormat("en-CA").format(new Date()),
+        }, ...current]);
+        setNotice("题目已提交，我们会尽快完成审核。");
+      }
+      setNoticeType("success");
+      setDraft(emptyDraft);
+      setEditingId(null);
+      setTab("list");
+    } catch (error) {
+      setNotice(errorMessage(error));
+      setNoticeType("error");
+    } finally {
+      setSubmitting(false);
     }
-    setDraft(emptyDraft);
-    setEditingId(null);
-    setTab("list");
   }
 
   function startEdit(item: Contribution) {
@@ -99,7 +138,6 @@ export default function ContributionsPage() {
       answer: item.answer,
       tags: item.tags.join("，"),
       difficulty: item.difficulty,
-      recommendVip: item.recommendVip,
     });
     setEditingId(item.id);
     setErrors({});
@@ -114,15 +152,40 @@ export default function ContributionsPage() {
     setErrors({});
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleting) return;
-    setContributions((current) => current.filter((item) => item.id !== deleting.id));
-    setNotice(`已删除「${deleting.title}」`);
-    setDeleting(null);
+    setDeletingId(deleting.id);
+    setNotice("");
+    try {
+      await questionService.remove(deleting.id);
+      setContributions((current) => current.filter((item) => item.id !== deleting.id));
+      setNotice(`已删除「${deleting.title}」`);
+      setNoticeType("success");
+      setDeleting(null);
+    } catch (error) {
+      setNotice(errorMessage(error));
+      setNoticeType("error");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  if (user && ownerUserId !== user.id) {
+    return (
+      <ProtectedContent>
+        <PersonalShell
+          eyebrow="题目贡献"
+          title="把你的好问题，分享给更多学习者。"
+          description="提交原创题目，并在一个地方查看审核进度与反馈。"
+        >
+          <section className="state-panel" role="status"><h1>正在准备贡献记录…</h1></section>
+        </PersonalShell>
+      </ProtectedContent>
+    );
   }
 
   return (
-    <PersonalShell
+    <ProtectedContent><PersonalShell
       eyebrow="题目贡献"
       title="把你的好问题，分享给更多学习者。"
       description="提交原创题目，并在一个地方查看审核进度与反馈。"
@@ -149,7 +212,7 @@ export default function ContributionsPage() {
           </button>
         </div>
 
-        {notice && <div className="feedback success" role="status">{notice}</div>}
+        {notice && <div className={`feedback ${noticeType}`} role={noticeType === "error" ? "alert" : "status"}>{notice}</div>}
 
         {tab === "submit" ? (
           <form className="contribution-form" onSubmit={handleSubmit} noValidate data-od-id="contribution-form">
@@ -206,17 +269,11 @@ export default function ContributionsPage() {
                 {["入门", "中级", "进阶"].map((item) => <option key={item}>{item}</option>)}
               </select>
             </label>
-            <label className="recommend-check full">
-              <input
-                type="checkbox"
-                checked={draft.recommendVip}
-                onChange={(event) => updateDraft("recommendVip", event.target.checked)}
-              />
-              <span><b>建议设为 VIP 专享</b><small>最终访问权限将由审核人员根据题目深度决定。</small></span>
-            </label>
             <div className="form-actions full">
               {editingId && <button className="secondary-button" type="button" onClick={cancelEdit}>取消编辑</button>}
-              <button className="form-primary" type="submit">{editingId ? "保存并重新提交" : "提交审核"}</button>
+              <button className="form-primary" type="submit" disabled={submitting}>
+                {submitting ? "正在提交…" : editingId ? "保存并重新提交" : "提交审核"}
+              </button>
             </div>
           </form>
         ) : contributions.length ? (
@@ -225,17 +282,13 @@ export default function ContributionsPage() {
               <article className="contribution-card" key={item.id} data-od-id={`contribution-${item.id}`}>
                 <div className="contribution-card-top">
                   <div className="tag-row">
-                    <span className={`status-badge ${item.status}`}>{statusLabels[item.status]}</span>
+                    <span className={`status-badge ${item.status}`}>待审核</span>
                     <span className={`difficulty ${item.difficulty}`}>{item.difficulty}</span>
-                    {item.recommendVip && <span className="vip-pill">建议 VIP</span>}
                   </div>
                   <time dateTime={item.submittedAt}>{item.submittedAt}</time>
                 </div>
                 <h2>{item.title}</h2>
                 <p>{item.content}</p>
-                {item.reviewComment && (
-                  <div className="review-comment" role="note"><b>审核意见</b><span>{item.reviewComment}</span></div>
-                )}
                 <div className="card-actions">
                   <button type="button" onClick={() => setViewing(item)}>查看</button>
                   <button type="button" onClick={() => startEdit(item)}>编辑</button>
@@ -246,8 +299,8 @@ export default function ContributionsPage() {
           </div>
         ) : (
           <div className="state-panel empty" role="status">
-            <span aria-hidden="true">稿</span><h2>还没有贡献记录</h2>
-            <p>提交你的第一道原创题目吧。</p>
+            <span aria-hidden="true">稿</span><h2>本次会话还没有贡献记录</h2>
+            <p>当前接口规范没有提供历史贡献列表；这里会显示你本次成功提交的题目。</p>
             <button type="button" onClick={() => setTab("submit")}>提交新题</button>
           </div>
         )}
@@ -273,11 +326,13 @@ export default function ContributionsPage() {
             <p id="delete-description">「{deleting.title}」删除后无法恢复。</p>
             <div className="form-actions">
               <button className="secondary-button" type="button" onClick={() => setDeleting(null)}>取消</button>
-              <button className="danger-button" type="button" onClick={confirmDelete}>确认删除</button>
+              <button className="danger-button" type="button" onClick={confirmDelete} disabled={deletingId === deleting.id}>
+                {deletingId === deleting.id ? "正在删除…" : "确认删除"}
+              </button>
             </div>
           </div>
         </div>
       )}
-    </PersonalShell>
+    </PersonalShell></ProtectedContent>
   );
 }

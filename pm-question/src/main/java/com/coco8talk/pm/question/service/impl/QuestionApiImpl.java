@@ -88,10 +88,11 @@ public class QuestionApiImpl implements QuestionApi {
     }
 
     @Override
-    public Page<QuestionForBankVO> queryApprovedForBank(List<Long> questionIds,
-                                                        Integer current,
-                                                        Integer pageSize,
-                                                        Long total) {
+    public Page<QuestionForBankVO> queryApprovedForBank(QuestionApi.ApprovedQuestionsRequest request) {
+        List<Long> questionIds = request.questionIds();
+        Integer current = request.current();
+        Integer pageSize = request.pageSize();
+
         // 处理空结果
         if (questionIds.isEmpty()) {
             return new Page<>(current, pageSize, 0);

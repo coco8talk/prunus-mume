@@ -10,8 +10,8 @@ const navigation = [
   { label: "Users", icon: "◎", href: "/users" },
   { label: "Question banks", icon: "▤", href: "/question-banks" },
   { label: "Questions", icon: "?", href: "/questions" },
-  { label: "Review queue", icon: "✓", planned: true },
-  { label: "Review history", icon: "↻", planned: true },
+  { label: "Review queue", icon: "✓", href: "/reviews/pending" },
+  { label: "Review history", icon: "↻", href: "/reviews/history" },
 ];
 
 function pageContext(pathname: string) {
@@ -23,6 +23,12 @@ function pageContext(pathname: string) {
   }
   if (pathname.startsWith("/questions")) {
     return { title: "Question management", description: "Question library and review state" };
+  }
+  if (pathname.startsWith("/reviews/pending")) {
+    return { title: "Review queue", description: "Pending editorial decisions" };
+  }
+  if (pathname.startsWith("/reviews/history")) {
+    return { title: "Review history", description: "Decision audit trail" };
   }
   return { title: "User management", description: "Accounts, roles and access" };
 }
@@ -106,21 +112,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 </span>
                 <span>{item.label}</span>
               </Link>
-            ) : (
-              <button
-                className="nav-item"
-                type="button"
-                key={item.label}
-                disabled
-                title="Available when this module's API contract is added"
-              >
-                <span className="nav-icon" aria-hidden="true">
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-                {item.planned && <small>Soon</small>}
-              </button>
-            ),
+            ) : null,
           )}
         </nav>
 

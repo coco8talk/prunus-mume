@@ -2,50 +2,65 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { BankVisual } from "@/app/components/BankVisual";
 import { Pagination } from "@/app/components/Pagination";
-import { banks } from "@/app/data/mock";
+import { bankService } from "@/app/lib/services";
+import { errorMessage } from "@/app/lib/api";
+import type { QuestionBank } from "@/app/data/models";
 
 const PAGE_SIZE = 6;
 
 export default function BanksPage() {
   const searchParams = useSearchParams();
+  const [input, setInput] = useState(searchParams.get("query") ?? "");
   const [query, setQuery] = useState(searchParams.get("query") ?? "");
-  const [category, setCategory] = useState("全部");
-  const [difficulty, setDifficulty] = useState("全部");
   const [sort, setSort] = useState("推荐");
   const [page, setPage] = useState(1);
+  const [banks, setBanks] = useState<QuestionBank[]>([]);
+  const [total, setTotal] = useState(0);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [message, setMessage] = useState("");
+  const [retry, setRetry] = useState(0);
 
-  const filtered = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    const next = banks.filter((bank) => {
-      const matchesQuery =
-        !term ||
-        [bank.title, bank.description, bank.eyebrow].some((value) =>
-          value.toLowerCase().includes(term),
-        );
-      return (
-        matchesQuery &&
-        (category === "全部" || bank.category === category) &&
-        (difficulty === "全部" || bank.level === difficulty)
-      );
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const sortRequest = sort === "最近更新"
+      ? { sortField: "updateTime", sortOrder: "descend" as const }
+      : sort === "最早创建"
+        ? { sortField: "createTime", sortOrder: "ascend" as const }
+        : {};
+
+    bankService.search({
+      current: page,
+      pageSize: PAGE_SIZE,
+      searchText: query.trim() || undefined,
+      ...sortRequest,
+    }, controller.signal).then((result) => {
+      setBanks(result.records);
+      setTotal(result.total);
+      setStatus("ready");
+    }).catch((error) => {
+      if (controller.signal.aborted) return;
+      setMessage(errorMessage(error));
+      setStatus("error");
     });
 
-    return [...next].sort((a, b) => {
-      if (sort === "题目最多") return b.questions - a.questions;
-      if (sort === "进度优先") return b.progress - a.progress;
-      return banks.indexOf(a) - banks.indexOf(b);
-    });
-  }, [category, difficulty, query, sort]);
+    return () => controller.abort();
+  }, [page, query, retry, sort]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPage(1);
+    setQuery(input);
+  }
 
   function resetFilters() {
+    setInput("");
     setQuery("");
-    setCategory("全部");
-    setDifficulty("全部");
     setSort("推荐");
     setPage(1);
   }
@@ -58,52 +73,29 @@ export default function BanksPage() {
           <h1>找到下一组值得练习的题。</h1>
           <p>从基础到进阶，按主题建立完整知识结构。</p>
         </div>
-        <span className="hero-count"><b>{banks.length}</b> 个精选题库</span>
+        <span className="hero-count"><b>{total}</b> 个精选题库</span>
       </section>
 
       <section className="filter-bar" aria-label="题库筛选">
-        <label className="filter-search">
+        <form className="filter-search" onSubmit={submitSearch}>
           <span className="sr-only">搜索题库</span>
           <span className="search-glyph" aria-hidden="true" />
           <input
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
             placeholder="搜索题库、方向或知识点"
           />
-        </label>
-        <label>
-          <span>分类</span>
-          <select
-            value={category}
-            onChange={(event) => {
-              setCategory(event.target.value);
-              setPage(1);
-            }}
-          >
-            {["全部", "前端", "算法", "架构", "后端", "数据库", "基础", "产品", "AI"].map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>难度</span>
-          <select
-            value={difficulty}
-            onChange={(event) => {
-              setDifficulty(event.target.value);
-              setPage(1);
-            }}
-          >
-            {["全部", "入门", "中级", "进阶"].map((item) => <option key={item}>{item}</option>)}
-          </select>
-        </label>
+        </form>
         <label>
           <span>排序</span>
-          <select value={sort} onChange={(event) => setSort(event.target.value)}>
-            {["推荐", "题目最多", "进度优先"].map((item) => <option key={item}>{item}</option>)}
+          <select
+            value={sort}
+            onChange={(event) => {
+              setSort(event.target.value);
+              setPage(1);
+            }}
+          >
+            {["推荐", "最近更新", "最早创建"].map((item) => <option key={item}>{item}</option>)}
           </select>
         </label>
       </section>
@@ -111,15 +103,26 @@ export default function BanksPage() {
       <div className="results-heading">
         <div>
           <p className="section-kicker">全部题库</p>
-          <h2>{filtered.length} 个结果</h2>
+          <h2>{total} 个结果</h2>
         </div>
-        <span>第 {filtered.length ? page : 0} / {totalPages || 0} 页</span>
+        <span>第 {total ? page : 0} / {totalPages || 0} 页</span>
       </div>
 
-      {visible.length > 0 ? (
+      {status === "loading" ? (
+        <div className="loading-list" role="status" aria-label="正在加载题库">
+          {[1, 2, 3].map((item) => <div key={item}><span /><span /><span /></div>)}
+        </div>
+      ) : status === "error" ? (
+        <section className="state-panel error" role="alert">
+          <span aria-hidden="true">!</span>
+          <h2>暂时无法获取题库</h2>
+          <p>{message}</p>
+          <button type="button" onClick={() => setRetry((value) => value + 1)}>重新加载</button>
+        </section>
+      ) : banks.length > 0 ? (
         <>
           <section className="bank-grid" data-od-id="bank-results-grid">
-            {visible.map((bank) => (
+            {banks.map((bank) => (
               <article className="bank-grid-card" key={bank.id}>
                 <Link className={`bank-visual ${bank.tone}`} href={`/banks/${bank.id}`} aria-label={`打开${bank.title}`}>
                   <BankVisual label={bank.eyebrow} />

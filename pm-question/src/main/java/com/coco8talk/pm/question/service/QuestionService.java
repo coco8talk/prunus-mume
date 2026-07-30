@@ -94,6 +94,21 @@ public interface QuestionService extends IService<Question> {
      * @return 查询结果
      */
     Result<Page<QuestionVO>> queryQuestionPage(QueryQuestionDTO queryQuestionDTO);
+
+    /** 按调用者角色创建题目：管理员自动通过，其他用户进入待审核。 */
+    Result<Long> createQuestionForCaller(CreateQuestionDTO createQuestionDTO);
+
+    /** 资源所有者或管理员删除题目。 */
+    Result<Void> deleteQuestionForCaller(Long questionId);
+
+    /** 资源所有者或管理员编辑题目。 */
+    Result<Boolean> editQuestionForCaller(EditQuestionDTO editQuestionDTO);
+
+    /** 管理员返回完整详情，其他调用者返回公开详情。 */
+    Result<Object> queryQuestionByIdForCaller(Long id);
+
+    /** 管理员返回管理视图，其他调用者返回公开视图。 */
+    Result<Object> queryQuestionPageForCaller(QueryQuestionDTO queryQuestionDTO);
     
     /**
      * 根据Id查询题目

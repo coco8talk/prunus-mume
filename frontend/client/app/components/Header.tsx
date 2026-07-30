@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/app/components/AuthProvider";
+import { errorMessage } from "@/app/lib/api";
 
 const primaryItems = [
   { href: "/", label: "首页", shortLabel: "首页", glyph: "⌂" },
@@ -16,6 +19,18 @@ function isActive(pathname: string, href: string) {
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, status, logout } = useAuth();
+  const displayName = user?.userName ?? user?.userAccount ?? "梅问用户";
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } catch (error) {
+      window.alert(errorMessage(error));
+    }
+    router.push(`/login?next=${encodeURIComponent(pathname)}`);
+  }
 
   return (
     <>
@@ -37,24 +52,35 @@ export function Header() {
           ))}
         </nav>
         <div className="topbar-actions">
-          <Link
-            className={`text-button ${isActive(pathname, "/me/favourites") ? "active" : ""}`}
-            href="/me/favourites"
-          >
-            我的收藏
-          </Link>
-          <details className="avatar-menu" data-od-id="profile-avatar-menu">
-            <summary className="avatar-button" aria-label="打开个人中心菜单">
-              <span>林</span>
-            </summary>
-            <div>
-              <p><b>林晚</b><small>linwan</small></p>
-              <Link href="/me/favourites">我的收藏</Link>
-              <Link href="/me/contributions">题目贡献</Link>
-              <Link href="/me/sign-in">每日签到</Link>
-              <Link href="/me/profile">个人资料</Link>
-            </div>
-          </details>
+          {status === "authenticated" && user ? (
+            <>
+              <Link
+                className={`text-button ${isActive(pathname, "/me/favourites") ? "active" : ""}`}
+                href="/me/favourites"
+              >
+                我的收藏
+              </Link>
+              <details className="avatar-menu" data-od-id="profile-avatar-menu">
+                <summary className="avatar-button" aria-label="打开个人中心菜单">
+                  {user.userAvatar
+                    ? <Image src={user.userAvatar} alt="" width={40} height={40} unoptimized />
+                    : <span>{displayName.slice(0, 1)}</span>}
+                </summary>
+                <div>
+                  <p><b>{displayName}</b><small>{user.userAccount}</small></p>
+                  <Link href="/me/favourites">我的收藏</Link>
+                  <Link href="/me/contributions">题目贡献</Link>
+                  <Link href="/me/sign-in">每日签到</Link>
+                  <Link href="/me/profile">个人资料</Link>
+                  <button type="button" onClick={handleLogout}>退出登录</button>
+                </div>
+              </details>
+            </>
+          ) : status === "anonymous" ? (
+            <Link className="text-button" href={`/login?next=${encodeURIComponent(pathname)}`}>
+              登录
+            </Link>
+          ) : null}
         </div>
       </header>
       <nav className="mobile-bottom-nav" aria-label="移动端主要导航">

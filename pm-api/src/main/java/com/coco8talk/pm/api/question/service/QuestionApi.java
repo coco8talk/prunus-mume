@@ -2,6 +2,12 @@ package com.coco8talk.pm.api.question.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.coco8talk.pm.api.question.dto.QuestionForBankVO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -11,6 +17,7 @@ import java.util.List;
  *
  * @author coco8talk
  */
+@FeignClient(name = "pm-question", path = "/api/internal/questions")
 public interface QuestionApi {
 
     /**
@@ -19,7 +26,8 @@ public interface QuestionApi {
      * @param questionId 题目ID
      * @return 存在返回 true，否则 false
      */
-    boolean exists(Long questionId);
+    @GetMapping("/{questionId}/exists")
+    boolean exists(@PathVariable("questionId") Long questionId);
 
     /**
      * 判断题目是否存在且已审核通过。
@@ -29,7 +37,8 @@ public interface QuestionApi {
      * @param questionId 题目ID
      * @return 已审核通过返回 true，否则 false
      */
-    boolean isApproved(Long questionId);
+    @GetMapping("/{questionId}/approved")
+    boolean isApproved(@PathVariable("questionId") Long questionId);
 
     /**
      * 调整题目点赞数（delta 可正可负）。
@@ -37,16 +46,20 @@ public interface QuestionApi {
      * @param questionId 题目ID
      * @param delta      增量
      */
-    void incrementThumbCount(Long questionId, int delta);
+    @PostMapping("/{questionId}/thumb-count")
+    void incrementThumbCount(@PathVariable("questionId") Long questionId, @RequestParam("delta") int delta);
 
     /** 收藏数增量（delta 可为负）；下限 0。 */
-    void incrementFavourCount(Long questionId, int delta);
+    @PostMapping("/{questionId}/favour-count")
+    void incrementFavourCount(@PathVariable("questionId") Long questionId, @RequestParam("delta") int delta);
 
     /** 当前点赞数（题目不存在返回 0）。 */
-    int getThumbCount(Long questionId);
+    @GetMapping("/{questionId}/thumb-count")
+    int getThumbCount(@PathVariable("questionId") Long questionId);
 
     /** 当前收藏数（题目不存在返回 0）。 */
-    int getFavourCount(Long questionId);
+    @GetMapping("/{questionId}/favour-count")
+    int getFavourCount(@PathVariable("questionId") Long questionId);
 
     /**
      * 根据题目ID列表分页查询已审核通过的题目（题库视图）。
@@ -57,8 +70,19 @@ public interface QuestionApi {
      * @param total       总记录数（用于构建分页对象）
      * @return 已审核通过的题目分页信息
      */
-    Page<QuestionForBankVO> queryApprovedForBank(List<Long> questionIds,
-                                                 Integer current,
-                                                 Integer pageSize,
-                                                 Long total);
+    default Page<QuestionForBankVO> queryApprovedForBank(List<Long> questionIds,
+                                                          Integer current,
+                                                          Integer pageSize,
+                                                          Long total) {
+        return queryApprovedForBank(new ApprovedQuestionsRequest(questionIds, current, pageSize, total));
+    }
+
+    @PostMapping("/approved")
+    Page<QuestionForBankVO> queryApprovedForBank(@RequestBody ApprovedQuestionsRequest request);
+
+    record ApprovedQuestionsRequest(List<Long> questionIds,
+                                    Integer current,
+                                    Integer pageSize,
+                                    Long total) {
+    }
 }

@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { useAuth } from "@/app/components/AuthProvider";
+import { errorMessage } from "@/app/lib/api";
+import { authService } from "@/app/lib/services";
 
 type Errors = Partial<Record<"account" | "password" | "confirm" | "terms", string>>;
 
 export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
+  const { setUser } = useAuth();
   const isLogin = mode === "login";
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
@@ -16,9 +20,10 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const [remember, setRemember] = useState(true);
   const [terms, setTerms] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
+  const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors: Errors = {};
 
@@ -30,14 +35,24 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    setFormError("");
     setSubmitting(true);
-    window.setTimeout(() => {
+    try {
       if (isLogin) {
-        router.push("/");
+        const user = await authService.login(account.trim(), password, remember);
+        setUser(user);
+        const requested = new URLSearchParams(window.location.search).get("next");
+        const next = requested?.startsWith("/") && !requested.startsWith("//") ? requested : "/";
+        router.push(next);
       } else {
+        await authService.register(account.trim(), password, confirm);
         router.push("/login?registered=1");
       }
-    }, 700);
+    } catch (error) {
+      setFormError(errorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -59,6 +74,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
             <p className="section-kicker">{isLogin ? "账号登录" : "创建账号"}</p>
             <h2>{isLogin ? "登录梅问" : "注册梅问"}</h2>
           </div>
+          {formError && <div className="feedback error" role="alert">{formError}</div>}
 
           <label className="field">
             <span>账号</span>

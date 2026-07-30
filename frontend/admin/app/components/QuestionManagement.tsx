@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ApiError, apiRequest } from "../lib/api";
 import { AdminShell } from "./AdminShell";
 import { useAuth } from "./AuthProvider";
+import { ReviewStatusBadge } from "./ReviewStatusBadge";
 
 type SortOrder = "ascend" | "descend" | undefined;
 
@@ -136,19 +137,6 @@ function difficultyClass(value?: number | null) {
   return 0;
 }
 
-function statusLabel(review?: Review | null) {
-  if (!review) return "Approved";
-  return (
-    review.reviewStatusDesc ||
-    ({ 0: "Pending", 1: "Approved", 2: "Rejected" }[review.reviewStatus] ??
-      "Unknown")
-  );
-}
-
-function statusClass(review?: Review | null) {
-  return review?.reviewStatus ?? 1;
-}
-
 function isAuthorizationError(error: unknown) {
   return error instanceof ApiError && (error.code === 401 || error.code === 403);
 }
@@ -222,7 +210,7 @@ export function QuestionManagement() {
     setError("");
     try {
       const response = await apiRequest<PageResult<Question>>(
-        "/questions/admin/search",
+        "/questions/search",
         { method: "POST", body: JSON.stringify(requestBody) },
         token,
       );
@@ -383,17 +371,17 @@ export function QuestionManagement() {
       });
       if (modalMode === "create") {
         await apiRequest<string>(
-          "/questions/admin",
+          "/questions",
           { method: "POST", body: JSON.stringify(payload) },
           token,
         );
         setNotice(`Created and approved “${form.title.trim()}”.`);
       } else if (selectedQuestion) {
         await apiRequest<boolean>(
-          "/questions/admin",
+          `/questions/${encodeURIComponent(selectedQuestion.id)}`,
           {
             method: "PUT",
-            body: JSON.stringify({ id: selectedQuestion.id, ...payload }),
+            body: JSON.stringify(payload),
           },
           token,
         );
@@ -418,20 +406,19 @@ export function QuestionManagement() {
     try {
       if (deleteTarget === "batch") {
         await apiRequest<boolean>(
-          "/questions/admin/batch",
+          "/questions/batch",
           {
             method: "DELETE",
-            body: JSON.stringify({ questionIds: ids }),
+            body: JSON.stringify(ids),
           },
           token,
         );
         setNotice(`Deleted ${ids.length} ${ids.length === 1 ? "question" : "questions"}.`);
       } else {
         await apiRequest<boolean>(
-          "/questions/admin",
+          `/questions/${encodeURIComponent(deleteTarget.id)}`,
           {
             method: "DELETE",
-            body: JSON.stringify({ id: deleteTarget.id }),
           },
           token,
         );
@@ -701,14 +688,11 @@ export function QuestionManagement() {
                         </div>
                       </td>
                       <td>
-                        <span
-                          className={`review-status review-status--${statusClass(
-                            question.reviewVo,
-                          )}`}
-                          title={question.reviewVo?.reviewMessage || undefined}
-                        >
-                          <i aria-hidden="true" />
-                          {statusLabel(question.reviewVo)}
+                        <span title={question.reviewVo?.reviewMessage || undefined}>
+                          <ReviewStatusBadge
+                            status={question.reviewVo?.reviewStatus ?? 1}
+                            description={question.reviewVo?.reviewStatusDesc}
+                          />
                         </span>
                       </td>
                       <td>

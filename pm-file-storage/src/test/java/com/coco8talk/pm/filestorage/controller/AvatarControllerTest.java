@@ -44,7 +44,7 @@ class AvatarControllerTest {
         when(avatarService.getAvatarCredentials("avatar.png"))
                 .thenReturn(Result.success(HttpStatusEnum.OK, credentials));
 
-        mockMvc.perform(get("/avatar/getAvatarCredentials")
+        mockMvc.perform(get("/avatars/credentials")
                         .param("filename", "avatar.png"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -60,7 +60,7 @@ class AvatarControllerTest {
     @Test
     void getAvatarCredentialsRejectsMissingFilenameBeforeCallingService()
             throws Exception {
-        mockMvc.perform(get("/avatar/getAvatarCredentials"))
+        mockMvc.perform(get("/avatars/credentials"))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(avatarService);

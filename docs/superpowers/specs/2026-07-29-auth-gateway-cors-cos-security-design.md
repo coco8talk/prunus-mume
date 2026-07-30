@@ -122,7 +122,7 @@ Client 现有运行时配置继续支持 `API_BASE_URL` 覆盖。Admin 继续使
 
 ### 自动化红绿测试
 
-- Gateway 配置测试：应用能加载 13 组显式 route，且没有 `/api/internal/**` route。
+- Gateway 配置测试：应用能加载 13 个批准的公开路径模式，且没有 `/api/internal/**` route。
 - Gateway CORS 测试：3000 与 3001 预检成功，未知来源被拒绝，响应暴露 `satoken`。
 - Auth 配置测试：Nacos 配置导入存在，端口为 8081，Redis 密码为占位符。
 - Web MVC CORS 测试：公共服务允许 3000/3001 并暴露 `satoken`。

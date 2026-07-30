@@ -3,13 +3,14 @@ package com.coco8talk.pm.filestorage.config;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class CosSecretHygieneTest {
@@ -26,7 +27,8 @@ class CosSecretHygieneTest {
         List<String> violations = new ArrayList<>();
 
         for (Path file : files) {
-            String content = Files.readString(file);
+            String content = Files.readString(
+                    file, StandardCharsets.ISO_8859_1);
             String relativePath = repositoryRoot.relativize(file).toString();
             if (SECRET_ID.matcher(content).find()) {
                 violations.add(relativePath + " [SECRET_ID]");
@@ -42,26 +44,41 @@ class CosSecretHygieneTest {
         }
     }
 
-    private static List<Path> filesToScan(Path repositoryRoot)
+    @Test
+    void scanIncludesTrackedFileOutsideFileStorageModule()
             throws IOException {
-        List<Path> files = new ArrayList<>();
-        Path resources = repositoryRoot.resolve(
-                "pm-file-storage/src/main/resources");
-        try (Stream<Path> paths = Files.walk(resources)) {
-            paths.filter(Files::isRegularFile).forEach(files::add);
-        }
+        Path repositoryRoot = repositoryRoot();
 
-        addIfPresent(files,
-                repositoryRoot.resolve("config/nacos/pm-file-storage.yaml"));
-        addIfPresent(files,
-                repositoryRoot.resolve("pm-file-storage/.env.example"));
-        return files;
+        assertThat(filesToScan(repositoryRoot))
+                .contains(repositoryRoot.resolve("pom.xml"));
     }
 
-    private static void addIfPresent(List<Path> files, Path file) {
-        if (Files.isRegularFile(file)) {
-            files.add(file);
+    private static List<Path> filesToScan(Path repositoryRoot)
+            throws IOException {
+        Process process = new ProcessBuilder(
+                "git", "ls-files", "--cached", "--others",
+                "--exclude-standard", "-z")
+                .directory(repositoryRoot.toFile())
+                .redirectErrorStream(true)
+                .start();
+        byte[] output = process.getInputStream().readAllBytes();
+        int exitCode;
+        try {
+            exitCode = process.waitFor();
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IOException("git ls-files interrupted", exception);
         }
+        if (exitCode != 0) {
+            throw new IOException("git ls-files failed");
+        }
+
+        return Pattern.compile("\\x00")
+                .splitAsStream(new String(output, StandardCharsets.UTF_8))
+                .filter(path -> !path.isEmpty())
+                .map(repositoryRoot::resolve)
+                .filter(Files::isRegularFile)
+                .toList();
     }
 
     private static Path repositoryRoot() {

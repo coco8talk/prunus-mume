@@ -13,7 +13,7 @@ Internal React and TypeScript operations console for Prunus Mume administrators.
 Copy `.env.example` to `.env.local` and set the backend origin:
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8082/api
 ```
 
 The value may be left empty when the API is served from the same origin.
@@ -28,7 +28,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3001`.
 
 ## Verify
 

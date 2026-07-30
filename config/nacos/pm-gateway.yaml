@@ -1,0 +1,56 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin Access-Control-Expose-Headers, RETAIN_UNIQUE
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - http://localhost:3000
+                  - http://127.0.0.1:3000
+                  - http://localhost:3001
+                  - http://127.0.0.1:3001
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - '*'
+                exposedHeaders:
+                  - satoken
+                allowCredentials: true
+                maxAge: 3600
+          routes:
+            - id: auth
+              uri: lb://pm-auth
+              predicates:
+                - Path=/api/auth/**
+            - id: user
+              uri: lb://pm-user
+              predicates:
+                - Path=/api/users/**
+            - id: question
+              uri: lb://pm-question
+              predicates:
+                - Path=/api/questions/**,/api/question-reviews/**,/api/question-banks/**,/api/question-bank-relations/**,/api/covers/**
+            - id: interaction
+              uri: lb://pm-interaction
+              predicates:
+                - Path=/api/thumbs/**,/api/favourites/**,/api/sign-ins/**
+            - id: payment
+              uri: lb://pm-payment
+              predicates:
+                - Path=/api/membership-orders/**,/api/alipay/**
+            - id: file-storage
+              uri: lb://pm-file-storage
+              predicates:
+                - Path=/api/avatars/**
+
+server:
+  port: 8082

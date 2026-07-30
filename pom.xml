@@ -19,6 +19,7 @@
         <module>pm-platform</module>
         <module>pm-api</module>
         <module>pm-auth</module>
+        <module>pm-gateway</module>
         <module>pm-user</module>
         <module>pm-question</module>
         <module>pm-interaction</module>

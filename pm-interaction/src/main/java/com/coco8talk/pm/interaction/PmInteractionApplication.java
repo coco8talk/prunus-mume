@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Import;
 @SpringBootApplication(scanBasePackages = {
         "com.coco8talk.pm.interaction",
         "com.coco8talk.pm.auth",
-        "com.coco8talk.pm.common"
+        "com.coco8talk.pm.common.chaos"
 })
 public class PmInteractionApplication {
 

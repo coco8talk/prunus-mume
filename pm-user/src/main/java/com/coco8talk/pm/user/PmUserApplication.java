@@ -21,7 +21,8 @@ import org.springframework.context.annotation.Import;
 })
 @SpringBootApplication(scanBasePackages = {
         "com.coco8talk.pm.user",
-        "com.coco8talk.pm.auth"
+        "com.coco8talk.pm.auth",
+        "com.coco8talk.pm.common"
 })
 @EnableDiscoveryClient
 @EnableFeignClients(clients = QuestionApi.class)

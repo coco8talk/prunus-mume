@@ -19,7 +19,8 @@ import org.springframework.context.annotation.Import;
 @EnableFeignClients(basePackageClasses = UserApi.class)
 @SpringBootApplication(scanBasePackages = {
         "com.coco8talk.pm.payment",
-        "com.coco8talk.pm.auth"
+        "com.coco8talk.pm.auth",
+        "com.coco8talk.pm.common"
 })
 public class PmPaymentApplication {
 

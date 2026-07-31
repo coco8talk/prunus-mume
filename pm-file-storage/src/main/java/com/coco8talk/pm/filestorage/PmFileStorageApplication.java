@@ -15,7 +15,8 @@ import org.springframework.context.annotation.Import;
 @EnableFeignClients(basePackageClasses = UserApi.class)
 @SpringBootApplication(scanBasePackages = {
         "com.coco8talk.pm.filestorage",
-        "com.coco8talk.pm.auth"
+        "com.coco8talk.pm.auth",
+        "com.coco8talk.pm.common"
 })
 public class PmFileStorageApplication {
 

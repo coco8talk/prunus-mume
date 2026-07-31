@@ -23,7 +23,8 @@ import org.springframework.context.annotation.Import;
 @EnableFeignClients(basePackageClasses = QuestionApi.class)
 @SpringBootApplication(scanBasePackages = {
         "com.coco8talk.pm.interaction",
-        "com.coco8talk.pm.auth"
+        "com.coco8talk.pm.auth",
+        "com.coco8talk.pm.common"
 })
 public class PmInteractionApplication {
 

@@ -89,6 +89,19 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- pm-auth 既是独立服务（PmAuthApplication）又是其他服务内嵌依赖的库。
+                     用 classifier 另存一份可执行 jar（pm-auth-*-exec.jar），
+                     不覆盖默认的 pm-auth-1.0.0.jar —— 后者是别的服务当依赖用的普通库 jar。 -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>exec</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

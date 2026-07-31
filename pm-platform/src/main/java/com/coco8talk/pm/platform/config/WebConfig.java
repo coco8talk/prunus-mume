@@ -1,6 +1,7 @@
 package com.coco8talk.pm.platform.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -14,11 +15,12 @@ import java.util.List;
  * @since 2025/7/3 19:04
  **/
 @Configuration
+@EnableConfigurationProperties(WebProperties.class)
 public class WebConfig implements WebMvcConfigurer {
     private final List<String> allowedOrigins;
 
-    public WebConfig(@Value("${coco8talk.web.allowed-origins}") List<String> allowedOrigins) {
-        this.allowedOrigins = allowedOrigins;
+    public WebConfig(WebProperties properties) {
+        this.allowedOrigins = properties.allowedOrigins();
     }
 
     @Override

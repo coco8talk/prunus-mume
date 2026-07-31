@@ -1,0 +1,11 @@
+groups:
+  - name: self-monitoring
+    rules:
+      - alert: PrometheusTargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scrape target down: {{ $labels.job }}"
+          description: "{{ $labels.instance }} has been unreachable for 2 minutes."

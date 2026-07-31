@@ -1,0 +1,15 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: local-null
+  group_by: ["alertname"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  # Placeholder receiver: alerts are accepted and visible in the Alertmanager UI
+  # but not delivered anywhere. Swap in a real webhook/email/chat receiver when
+  # you need actual notifications, and put any credentials in .env, not here.
+  - name: local-null

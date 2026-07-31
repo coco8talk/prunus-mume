@@ -1,0 +1,64 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - /etc/prometheus/rules/alerts.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: alertmanager
+    static_configs:
+      - targets: ["alertmanager:9093"]
+
+  - job_name: loki
+    static_configs:
+      - targets: ["loki:3100"]
+
+  - job_name: alloy
+    static_configs:
+      - targets: ["alloy:12345"]
+
+  # server.servlet.context-path: /api（pm-common.yaml 里配的）也会作用到 actuator，
+  # 所以这里不是默认的 /actuator/prometheus，是 /api/actuator/prometheus。
+  - job_name: pm-user
+    metrics_path: /api/actuator/prometheus
+    static_configs:
+      - targets: ["pm-user:8091"]
+
+  - job_name: pm-auth
+    metrics_path: /api/actuator/prometheus
+    static_configs:
+      - targets: ["pm-auth:8081"]
+
+  - job_name: pm-payment
+    metrics_path: /api/actuator/prometheus
+    static_configs:
+      - targets: ["pm-payment:8089"]
+
+  - job_name: pm-question
+    metrics_path: /api/actuator/prometheus
+    static_configs:
+      - targets: ["pm-question:8083"]
+
+  - job_name: pm-interaction
+    metrics_path: /api/actuator/prometheus
+    static_configs:
+      - targets: ["pm-interaction:8086"]
+
+  - job_name: pm-file-storage
+    metrics_path: /api/actuator/prometheus
+    static_configs:
+      - targets: ["pm-file-storage:8092"]
+
+  # No exporter is bundled for MySQL / Redis / PostgreSQL / RabbitMQ / Nacos yet —
+  # add a mysqld_exporter / redis_exporter / postgres_exporter / rabbitmq_prometheus
+  # plugin / nacos actuator target here once you need infra-level metrics.

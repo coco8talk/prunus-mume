@@ -1,11 +1,11 @@
-### Maven ###
+# Java / Maven
 target/
 .flattened-pom.xml
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# Eclipse / STS
 .apt_generated
 .classpath
 .factorypath
@@ -14,13 +14,13 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
+# IntelliJ IDEA
 .idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -30,25 +30,24 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
 
-### Local tools ###
+# Local developer tools
 .codegraph/
+.claude/settings.local.json
 
-### Local environment ###
+# Local environment
 .env
 .env.*
 !.env.example
 
-### Logs and runtime files ###
+# Logs and runtime files
 *.log
 logs/
 hs_err_pid*
 replay_pid*
 
-### OS ###
+# Operating systems
 .DS_Store
 Thumbs.db
-
-docs/
